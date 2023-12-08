@@ -1,3 +1,4 @@
+"use client"
 import Image from 'next/image'
 import { useContext} from 'react';
 
@@ -12,7 +13,7 @@ const Checker_Home = () => {
         <div>
             <Header {...userstate_.loginstate}/>
             <div className="px-32">
-                <div className="h-96 my-52 flex items-center space-x-48 border-2 border-red-600">
+                <div className="h-96 my-52 flex items-center space-x-48">
                     <div className="min-w-max space-y-5">
                         <div className="font-Noto_Sans_JP text-6xl font-semibold text-gray1">
                             <p>昨日よりも頑張れる</p>

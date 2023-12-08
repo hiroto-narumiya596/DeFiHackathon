@@ -22,6 +22,7 @@ class Trier(BaseModel):
 class Checker(BaseModel):
     id: str
     name: str
+    token: int
     tasks: List[Task]
 
 class UserAuthState(BaseModel):

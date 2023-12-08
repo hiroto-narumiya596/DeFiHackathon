@@ -24,7 +24,7 @@ const api_service_login: string = '/api/service/login';
 
 const defaultloginState: LoginState = {loginstate:"not login"} //not login、checker、trierのどれか
 const defaulttrier: Trier = {id:"", name:"", token:0, tasks:[]}
-const defaultchecker: Checker = {id:"", name:"", tasks:[]}
+const defaultchecker: Checker = {id:"", name:"", token:0, tasks:[]}
 const defaultuserstate: UserAuthState = {loginstate: defaultloginState, trierstate: defaulttrier, checkerstate: defaultchecker}
 
 
@@ -83,7 +83,7 @@ const Login = () => {
             userstate_.trierstate = userdata.trierstate;
             userstate_.checkerstate = userdata.checkerstate;
 
-            console.log(userstate_.loginstate)
+            console.log(userstate_.checkerstate)
             
             if(userstate_.loginstate.loginstate=="checker"){
                 router.push("/checker");

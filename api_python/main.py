@@ -15,8 +15,8 @@ task2: Task = Task(id="Biufwe243NDjink", name="らくらく英単語", img="", d
 task3: Task = Task(id="siuGweV43NDjink", name="らくらく英単語", img="", description="らくらく英単語帳のP21~30までが範囲", checkerid="InjeBi12ni1NJd", taskinfoURL="", testinfoURL="")
 trier_null: Trier = Trier(id="", name="", token=0, tasks=[])
 trier1: Trier = Trier(id="Ugjw874NJboef", name="Ryodai", token=3000, tasks=[task1])
-checker_null: Checker = Checker(id="", name="", tasks=[])
-checker1: Checker = Checker(id="InjeBi12ni1NJd", name="Ohmiya1207", tasks=[task1, task2, task3])
+checker_null: Checker = Checker(id="", name="", token=0, tasks=[])
+checker1: Checker = Checker(id="InjeBi12ni1NJd", name="Ohmiya1207", token=10000, tasks=[task1, task2, task3])
 trier1_password: str = "Ryodai1207"
 checker1_password: str = "Ohmiya1207"
 

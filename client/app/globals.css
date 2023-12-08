@@ -31,8 +31,7 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-width: 2px;
-  border-color: #DC2626;
+
 }
 
 footer {
@@ -52,5 +51,19 @@ footer {
 .content{
   height: fit-content;
   width: fit-content;
+}
+
+.taskbanner{
+  height: 12rem;
+  width: 40%;
+  min-width: 36rem;
+  max-width: 0 auto;
+  padding-left: 2rem;
+  padding-right: 2rem;
+  display: flex;
+  align-items: center;
+  border-radius: 0.75rem;
+  border-color: #DDDDDD;
+  border-width: 2px;
 }
 

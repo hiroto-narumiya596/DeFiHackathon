@@ -1,7 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
-import AccountButtonImage from "source/img/account_circle_FILL1_wght400_GRAD0_opsz24.svg";
-import { LoginState } from "@/app/_common/types/datadefinition";
+
 
 interface PageButtonProperty{
     name: string,

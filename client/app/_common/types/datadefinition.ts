@@ -25,6 +25,7 @@ export type Trier = {
 export type Checker = {
     id: string,
     name: string,
+    token: number,
     tasks: Task[],
 };
 

@@ -35,13 +35,13 @@ const task3: Task = {
 
 const trier1: Trier = {id:"Ugjw874NJboef", name:"Ryodai", token:3000, tasks:[task1]};
 const trier1_password: string = "Ryodai1207";
-const checker1: Checker = {id:"InjeBi12ni1NJd", name:"Ohmiya", tasks:[task1,task2,task3]};
+const checker1: Checker = {id:"InjeBi12ni1NJd", name:"Ohmiya", token:10000,tasks:[task1,task2,task3]};
 const checker1_password: string = "Ohmiya1207";
 const notlogin: LoginState = {loginstate: ""};
 const login_checker: LoginState = {loginstate: "checker"};
 const login_trier: LoginState = {loginstate: "trier"};
 const trier_empty: Trier = {id: "", name: "", token:0, tasks: []};
-const checker_empty: Checker = {id: "", name: "", tasks: []};
+const checker_empty: Checker = {id: "", name: "", token:0, tasks: []};
 
 
 

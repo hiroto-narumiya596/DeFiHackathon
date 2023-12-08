@@ -11,7 +11,7 @@ import { LoginState } from "@/app/_common/types/datadefinition";
 const LogInAsset = () => {
     const ButtonProperty_LogIn: PageButtonProperty = {name: "Log In", link: "/login", appearance: "white"};
     return(
-        <div className="flex space-x-5 w-fit h-fit border-2 border-red-600">
+        <div className="flex space-x-5 w-fit h-fit">
             <Button.PageButton {...ButtonProperty_LogIn}/>
            
             <div className="px-4 py-1 rounded bg-green1">
@@ -26,7 +26,7 @@ const LogInAsset = () => {
 const AccountButtonAsset = (loginstate: LoginState) => {
     const ImageButtonProperty_Account: ImageButtonProperty = {
         name: "Account", 
-        className: "w-12 h-12 border-2 border-red-600", 
+        className: "w-12 h-12", 
         link: "", 
         img: AccountButtonImage};
     
@@ -48,9 +48,9 @@ const Header = (loginstate_: LoginState) => {
     if(loginstate_.loginstate=="checker" || loginstate_.loginstate=="trier"){
         return(
             <header>
-                <div className="content">
+                <Link className="content" href={"/"}>
                     <div className="font-Inter text-2xl font-bold">TaCS System</div>
-                </div>
+                </Link>
                 <div className="flex space-x-10 w-fit h-fit">
                     <div className="content"><Link href={'/'}>Home</Link></div>
                     <div className="content">Concept</div>
@@ -66,9 +66,9 @@ const Header = (loginstate_: LoginState) => {
     }else{
         return(
             <header>
-                <div className="content">
+                <Link className="content" href={"/"}>
                     <div className="font-Inter text-2xl font-bold">TaCS System</div>
-                </div>
+                </Link>
                 <div className="flex space-x-10 w-fit h-fit">
                     <div className="content"><Link href={'/'}>Home</Link></div>
                     <div className="content">Concept</div>
