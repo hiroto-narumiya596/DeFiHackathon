@@ -26,23 +26,23 @@ const AccountPage_Trier_Body = (userstate_: UserAuthState) => {
     const trierstate_ = userstate_.trierstate;
     return(
         <div className="h-screen w-screen px-32 py-10">
-            <div className="text-3-xl font-bold">Account Information</div>
+            <div className="text-3xl font-bold">Account Information</div>
+            <div>
                 <div>
-                    <div>
-                        <div>name</div>
-                        <div>{trierstate_.name}</div>
-                    </div>
-                    <div>
-                        <div>token</div>
-                        <div>{trierstate_.token}</div>
-                    </div>
+                    <div>name</div>
+                    <div>{trierstate_.name}</div>
                 </div>
+                <div>
+                    <div>token</div>
+                    <div>{trierstate_.token}</div>
+                </div>
+            </div>
             <hr className="border-gray-400"></hr>
             <div>
                 <div>List of Committed Tasks</div>
                 <div>
                     {userstate_.trierstate.tasks.map((task)=>(
-                        <TaskBlock {...task}/>
+                        <TaskBlock {...task} key={task.id}/>
                     ))}
                 </div>
             </div>
