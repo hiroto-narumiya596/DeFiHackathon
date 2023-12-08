@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
+  }
+}
+
+body {
+  background-color: #FFFFFF;
+}
+
+header {
+  height: 6rem;
+  width: 100vw;
+  min-width: 65rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  padding-left: 8rem;
+  padding-right: 8rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-width: 2px;
+  border-color: #DC2626;
+}
+
+footer {
+  height: 12rem;
+  width: 100vx;
+  min-width: 65rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  padding-left: 8rem;
+  padding-right: 8rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #4CB24F;
+}
+
+.content{
+  height: fit-content;
+  width: fit-content;
+}
+

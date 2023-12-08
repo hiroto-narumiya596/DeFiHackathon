@@ -1,0 +1,41 @@
+"use client"
+import Image from 'next/image'
+import { useContext} from 'react';
+
+import TopImage from "source/img/Illustration.svg";
+import { UserStateContext } from '@/app/_common/hooks/statemanagement';
+import Header from '@/app/_components/ui_parts/header';
+import Footer from '@/app/_components/ui_parts/footer';
+
+const Trier_Home = () => {
+    const userstate_ = useContext(UserStateContext);
+    console.log(userstate_)
+    return(
+        <div>
+            <UserStateContext.Provider value={userstate_}>
+                <Header {...userstate_.loginstate}/>
+                <div className="px-32">
+                    <div className="h-96 my-52 flex items-center space-x-48 border-2 border-red-600">
+                        <div className="min-w-max space-y-5">
+                            <div className="font-Noto_Sans_JP text-6xl font-semibold text-gray1">
+                                <p>昨日よりも頑張れる</p>
+                                <p>自分になろう</p>
+                            </div>
+                            <div className="font-Inter text-xl font-normal text-gray1">
+                                Be Better, Get Better
+                            </div>
+                        </div>
+                        <Image
+                            src={TopImage}
+                            className="h-96 w-96"
+                            alt="TopImage"
+                        />
+                    </div>
+                </div>
+                <Footer/>
+            </UserStateContext.Provider>
+        </div>
+    )
+}
+
+export default Trier_Home;
