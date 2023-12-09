@@ -1,5 +1,5 @@
 "use client"
-import { useContext, createContext } from "react";
+import { createContext } from "react";
 import { LoginState, Trier, Checker, UserAuthState } from "../types/datadefinition";
 
 const defaultloginState: LoginState = {loginstate:"not login"} //not login、checker、trierのどれか

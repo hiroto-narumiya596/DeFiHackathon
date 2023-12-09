@@ -1,7 +1,8 @@
 "use client"
-import { useContext } from "react"
+import { useContext, useState } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
+import {useForm, SubmitHandler } from 'react-hook-form';
 
 import Header from "@/app/_components/ui_parts/header"
 import Footer from "@/app/_components/ui_parts/footer"
@@ -9,6 +10,18 @@ import { UserStateContext } from "@/app/_common/hooks/statemanagement"
 import { UserAuthState, Task, Checker } from "@/app/_common/types/datadefinition"
 import ServiceIcon from "source/img/serviceicon1.svg"
 import UserIcon from "source/img/usericon.svg"
+
+
+type AddTaskData = {
+    taskname: string,
+    description: string,
+    checkerid: string,
+    missionspan: number,
+    taskinfoURL: string,
+    testinfoURL: string,
+}
+
+
 
 const AccountPage_Checker = () => {
     const userstate_ = useContext(UserStateContext)    
@@ -25,8 +38,15 @@ const AccountPage_Checker = () => {
 
 const AccountPage_Checker_Body = (userstate_: UserAuthState) => {
     const checkerstate_: Checker = userstate_.checkerstate;
+    const [isModalOpen, setModalOpen] = useState(false);
+    console.log(userstate_)
     return(
-        <div className="min-h-fit w-screen px-32 py-6">
+        <div className="min-h-fit w-screen">
+            {isModalOpen?
+            <div className="absolute">
+                <ModalComponent checkerstate_={checkerstate_} setModalOpen={setModalOpen}/>
+            </div>:<></>}
+            <div className="px-32 py-6">
             <div className="text-4xl font-bold">Account Information</div>
             <div className="flex space-x-8 my-5">
                 <Image src={UserIcon} className="h-28 w-28 m-5" alt="UserIcon"/>
@@ -42,7 +62,18 @@ const AccountPage_Checker_Body = (userstate_: UserAuthState) => {
                 </div>
             </div>
             <hr className="border-gray-400"></hr>
-            <div className="mx-1 my-5 space-y-5">
+            <TaskList {...userstate_}/>
+            <button className="w-fit h-fit px-4 py-2 rounded bg-green1" onClick={() => {setModalOpen(true)}}>
+                <div className="text-xl text-semibold text-white">新規タスク追加</div>
+            </button>            
+            </div>
+        </div>
+    )
+}
+
+const TaskList = (userstate_: UserAuthState) => {
+    return (
+        <div className="mx-1 my-5 space-y-5">
                 <div className="text-3xl font-semibold">List of Committed Tasks</div>
                 <div className="space-y-3">
                     {userstate_.checkerstate.tasks.map((task)=>(
@@ -50,9 +81,10 @@ const AccountPage_Checker_Body = (userstate_: UserAuthState) => {
                     ))}
                 </div>
             </div>
-        </div>
     )
 }
+
+
 
 const TaskBlock = (task_: Task) => {
 
@@ -69,10 +101,94 @@ const TaskBlock = (task_: Task) => {
                     <Image src={ServiceIcon} className="w-36 h-36" alt="ServiceImage"/>
                     <div className="space-y-8 text-left">
                         <p className="text-2xl font-semibold text-green1">{task_.name}</p>
+                        <p className="text-lg font-medium text-red-600">ミッション期間：  {task_.missionspan}日</p>
                         <p className="mt-2 flex-wrap text-clip">{task_.description}</p>
                     </div>
                 </div>
         </div></button>
+    )
+}
+
+const ModalComponent = (props: {checkerstate_: Checker, setModalOpen: any}) =>{
+    const router = useRouter()
+
+    const {
+        register,
+        handleSubmit,
+        watch,
+        formState: { errors }
+      } = useForm<AddTaskData>({
+        defaultValues: {
+            taskname: "",
+            description: "",
+            checkerid: "",
+            missionspan: 0,
+            taskinfoURL: "",
+            testinfoURL: "",
+        },
+    });    
+
+    const onSubmit: SubmitHandler<AddTaskData> = async (data: AddTaskData) => {
+        try{
+            //ここでタスク追加のAPIを実行する
+            const response = await fetch('http://127.0.0.1:8000/addtask',{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': 'http://127.0.0.1:8000/addtask',
+                }, 
+                body: JSON.stringify(data),
+            })
+            const checker_data: any = await response.json(); //データの受け取り
+            props.checkerstate_.tasks = checker_data.tasks;
+            props.setModalOpen(false);
+        }
+        catch(e){
+            console.log(e)
+        }
+    }
+
+    return(
+        <div className="h-screen w-screen py-12 bg-black bg-opacity-20">
+            <form className='px-28 py-12 space-y-6 w-fit m-auto rounded bg-white border-2 border-gray' method="post" onSubmit={handleSubmit(onSubmit)}>
+                <div className="text-3xl text-green1 font-medium">
+                    Add Task
+                </div>
+                <div className="space-y-4">
+                    <div className='flex-col space-y-0.5'>
+                        <div>Task Name</div>
+                        <input className='h-10 border-2 border-gray' placeholder='taskname' {...register('taskname')}></input>
+                    </div>
+                    <div className='flex-col space-y-0.5'>
+                        <div>Description</div>
+                        <input className='h-10 border-2 border-gray' placeholder='description' {...register('description')}></input>
+                    </div>
+                    <div className='flex-col space-y-0.5'>
+                        <div>Checker ID</div>
+                        <input className='h-10 border-2 border-gray' placeholder='checkerid' {...register('checkerid')}></input>
+                    </div>
+                    <div className='flex-col space-y-0.5'>
+                        <div>Mission Span</div>
+                        <input className='h-10 border-2 border-gray' placeholder='missionspan' {...register('missionspan')}></input>
+                    </div>
+                    <div className='flex-col space-y-0.5'>
+                        <div>Task Page</div>
+                        <input className='h-10 border-2 border-gray' placeholder='taskinfoURL' {...register('taskinfoURL')}></input>
+                    </div>
+                    <div className='flex-col space-y-0.5'>
+                        <div>Test Page URL</div>
+                        <input className='h-10 border-2 border-gray' placeholder='testinfoURL' {...register('testinfoURL')}></input>
+                    </div>
+                </div>
+                <div className="w-full flex justify-center border-2">
+                    <button className='w-full px-6 py-2 rounded bg-green1' type='submit'>
+                        <div className='m-auto text-white font-medium'>
+                            Register Task
+                        </div>
+                    </button>
+                </div>
+            </form>
+        </div>
     )
 }
 

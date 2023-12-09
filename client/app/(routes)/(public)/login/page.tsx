@@ -5,11 +5,10 @@ import {useContext} from 'react';
 import {useForm, SubmitHandler } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 
-import { LoginState, Task, Trier, Checker,UserAuthState } from '@/app/_common/types/datadefinition';
+import { LoginState, Trier, Checker,UserAuthState } from '@/app/_common/types/datadefinition';
 import { UserStateContext } from '@/app/_common/hooks/statemanagement';
 import Header from '@/app/_components/ui_parts/header';
 import Footer from '@/app/_components/ui_parts/footer';
-//import { loginstate, trier, checker } from '@/app/_common/hooks/statemanagement';
 
 
 //readablestream?
@@ -19,8 +18,6 @@ type Logindata = {
     password: string,
 };
 
-const api_service_login: string = '/api/service/login';
-//'http://localhost:3001/api/service/login'
 
 const defaultloginState: LoginState = {loginstate:"not login"} //not login、checker、trierのどれか
 const defaulttrier: Trier = {id:"", name:"", token:0, tasks:[]}
@@ -28,18 +25,7 @@ const defaultchecker: Checker = {id:"", name:"", token:0, tasks:[]}
 const defaultuserstate: UserAuthState = {loginstate: defaultloginState, trierstate: defaulttrier, checkerstate: defaultchecker}
 
 
-//これを信じた
-//https://zenn.dev/uttk/scraps/f4959ea0cb27ef
-//useStateとuseContextを合わせて使ってはいけない。
-/*
-const LoginPage = () => {
-    const [userstate_, setUserState_] = useState<UserAuthState>(defaultuserstate);
-    return (
-        <UserStateContext.Provider value={userstate_}>
-            <Login/>
-        </UserStateContext.Provider>
-    )
-}*/
+
 
 const Login = () => {
     const {
@@ -58,15 +44,13 @@ const Login = () => {
     const router = useRouter();
     const userstate_ = useContext(UserStateContext);
 
-    //const [trier_, setLogTrier] = useContext(trier);
-    //const [checker_, setChecker] = useContext(checker);
-    //const [userState_, setUserState_] = useState<UserAuthState>();
-
+    //onSubmit関数は、このコンポーネント内で定義しなければならない
     const onSubmit: SubmitHandler<Logindata> = async(data: Logindata) => {
         
         const user_type= data.user_type;
         console.log(JSON.stringify(data));
         try{
+            //ここでログインのAPIを実行する
             const response = await fetch('http://127.0.0.1:8000/login',{
                 method: 'POST',
                 headers: {

@@ -1,7 +1,5 @@
 
 import Link from "next/link";
-import Image from "next/image";
-import { useContext } from "react";
 import Button from "../ui_elements/Button";
 import {PageButtonProperty, ImageButtonProperty} from "../ui_elements/Button";
 import AccountButtonImage from "source/img/account_circle_FILL1_wght400_GRAD0_opsz24.svg";
@@ -45,14 +43,14 @@ const AccountButtonAsset = (loginstate: LoginState) => {
 }
 
 const Header = (loginstate_: LoginState) => {
-    if(loginstate_.loginstate=="checker" || loginstate_.loginstate=="trier"){
+    if(loginstate_.loginstate=="checker"){
         return(
             <header>
-                <Link className="content" href={"/"}>
+                <Link className="content" href={"/checker"}>
                     <div className="font-Inter text-2xl font-bold">TaCS System</div>
                 </Link>
                 <div className="flex space-x-10 w-fit h-fit">
-                    <div className="content"><Link href={'/'}>Home</Link></div>
+                    <div className="content"><Link href={'/checker'}>Home</Link></div>
                     <div className="content">Concept</div>
                     <div className="content">About us</div>
                     <div className="content">Q&A</div>
@@ -63,7 +61,26 @@ const Header = (loginstate_: LoginState) => {
             </header>
     
         )
-    }else{
+    }
+    else if(loginstate_.loginstate=="trier"){
+        return(
+            <header>
+                <Link className="content" href={"/trier"}>
+                    <div className="font-Inter text-2xl font-bold">TaCS System</div>
+                </Link>
+                <div className="flex space-x-10 w-fit h-fit">
+                    <div className="content"><Link href={'/trier'}>Home</Link></div>
+                    <div className="content">Concept</div>
+                    <div className="content">About us</div>
+                    <div className="content">Q&A</div>
+                </div>
+                <div className="w-auto h-auto">
+                    <AccountButtonAsset {...loginstate_}/>
+                </div>
+            </header>            
+        )
+    }
+    else{
         return(
             <header>
                 <Link className="content" href={"/"}>

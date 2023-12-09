@@ -11,6 +11,7 @@ export type Task = {
     img: string,
     description: string,
     checkerid: string,
+    missionspan: number,
     taskinfoURL: string,
     testinfoURL: string,    
 };

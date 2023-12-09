@@ -10,7 +10,7 @@ import ServiceIcon from "source/img/serviceicon1.svg"
 
 const TaskPage = ({ params }: { params: {taskid: string }}) => {
     const userstate_ = useContext(UserStateContext);
-    const task_: Task = {id:"", name:"", img:"", description:"", checkerid:"", taskinfoURL:"", testinfoURL:""};
+    const task_: Task = {id:"", name:"", img:"", description:"", checkerid:"", missionspan:0, taskinfoURL:"", testinfoURL:""};
 
     for(let task of userstate_.trierstate.tasks){
         if(task.id == params.taskid){
@@ -18,6 +18,7 @@ const TaskPage = ({ params }: { params: {taskid: string }}) => {
             task_.img = task.img;
             task_.description = task.description;
             task_.checkerid = task.checkerid;
+            task_.missionspan = task.missionspan
             task_.taskinfoURL = task.taskinfoURL;
             task_.testinfoURL = task.testinfoURL;
         }
@@ -46,11 +47,11 @@ const TaskPage = ({ params }: { params: {taskid: string }}) => {
                     </div>
                     <div className="space-y-1">
                         <div className="text-2xl medium">TaskURL</div>
-                        <div className="text-lg ">{task_.taskinfoURL}</div>
+                        <div className="text-lg "><a>{task_.taskinfoURL}</a></div>
                     </div>
                     <div className="space-y-1">
                         <div className="text-2xl medium">TestURL</div>
-                        <div className="text-lg ">{task_.testinfoURL}</div>
+                        <div className="text-lg "><a>{task_.testinfoURL}</a></div>
                     </div>                                        
                 </div>
             </div>
