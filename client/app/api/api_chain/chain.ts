@@ -30,12 +30,14 @@ export class Chain {
     client: xrpl.Client | undefined
     wallet: xrpl.Wallet | undefined
     issuerAccount: string
+    commitCount: bigint
 
     constructor(issuer: string) {
         this.loginState = "None"
         this.client = undefined
         this.wallet = undefined
         this.issuerAccount = issuer
+        this.commitCount = 0n // TODO: get data from ledger
     }
     async connect(serverUrl: string) : Promise<boolean> {
         this.client = new xrpl.Client(serverUrl)
@@ -77,6 +79,9 @@ export class Chain {
             return undefined
         }
 
+        let result: string = rippleAddressCodec.decodeAccountID(this.wallet.classicAddress).toString().toUpperCase() + bi64ToHex(this.commitCount)
+
+        /*
         const trierKey = "B000000000000000" + rippleAddressCodec.decodeAccountID(this.wallet.classicAddress)
         const namespaceId = "tacs"
 
@@ -88,7 +93,9 @@ export class Chain {
                 "namespace_id": namespaceId,
             }
         }) as xrpl.LedgerEntryResponse
-        return "" // TODO
+        */
+        this.commitCount += 1n
+        return result // TODO: get ledger data
     }
     async createTask(taskHash: string, intervalInSeconds: string) : Promise<boolean> {
         if (this.wallet === undefined || this.client === undefined) {
