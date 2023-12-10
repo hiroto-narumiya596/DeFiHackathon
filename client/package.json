@@ -9,11 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@transia/hooks-toolkit": "^1.0.8",
+    "@xrplkit/xfl": "^2.0.2",
+    "crypto-js": "^4.2.0",
     "next": "14.0.3",
     "next-auth": "^4.24.5",
     "react": "^18",
     "react-dom": "^18",
-    "react-hook-form": "^7.48.2"
+    "react-hook-form": "^7.48.2",
+    "ripple-address-codec": "^4.3.1"
   },
   "devDependencies": {
     "@types/node": "^20",
