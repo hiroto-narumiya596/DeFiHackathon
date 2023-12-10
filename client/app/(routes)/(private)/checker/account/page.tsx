@@ -11,15 +11,7 @@ import { UserAuthState, Task, Checker, Request } from "@/app/_common/types/datad
 import ServiceIcon from "source/img/serviceicon1.svg"
 import UserIcon from "source/img/usericon.svg"
 
-//タスク追加のときに使われる
-type AddTaskData = {
-    taskname: string,
-    description: string,
-    checkerid: string,
-    missionspan: number,
-    taskinfoURL: string,
-    testinfoURL: string,
-}
+
 
 //タスク承認のときに使われる
 type CheckandApprovalData = {
@@ -72,7 +64,7 @@ const AccountPage_Checker_Body = (userstate_: UserAuthState) => {
                 </div>
                 <hr className="border-gray-400"></hr>
                 <TaskList {...userstate_}/>
-                <button className="w-fit h-fit px-4 py-2 rounded bg-green1" onClick={() => {setModalOpen(true)}}>
+                <button className="w-fit h-fit mb-5 px-4 py-2 rounded bg-green1" onClick={() => {setModalOpen(true)}}>
                     <div className="text-xl text-semibold text-white">新規タスク追加</div>
                 </button>
                 <hr className="border-gray-400"></hr>
@@ -118,6 +110,98 @@ const TaskBlock = (task_: Task) => {
     )
 }
 
+
+//タスク追加のときに使われるモーダルコンポーネント。
+//タスク追加のときにチェーンとはやり取りしない。
+const ModalComponent = (props: {checkerstate_: Checker, setModalOpen: any}) =>{
+    const router = useRouter()
+
+    const {
+        register,
+        handleSubmit,
+        watch,
+        formState: { errors }
+      } = useForm<Task>({
+        defaultValues: {
+            id: "",
+            name: "",
+            img: "",
+            description: "",
+            checkerid: "",
+            missionspan: 0,
+            taskinfoURL: "",
+            testinfoURL: "",
+        },
+    });    
+
+    const onSubmit: SubmitHandler<Task> = async (data: Task) => {
+        try{
+            //ここでタスク追加のAPIを実行する
+            const response = await fetch('http://127.0.0.1:8000/addtask',{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': 'http://127.0.0.1:8000/addtask',
+                }, 
+                body: JSON.stringify(data),
+            })
+            const task: Task = await response.json(); //データの受け取り
+            props.checkerstate_.tasks.push(task);
+            props.setModalOpen(false);
+        }
+        catch(e){
+            console.log(e)
+        }
+    }
+
+    return(
+        <div className="h-screen w-screen py-12 bg-black bg-opacity-20">
+            <form className='px-28 py-12 space-y-6 w-fit m-auto rounded bg-white border-2 border-gray' method="post" onSubmit={handleSubmit(onSubmit)}>
+                <div className="text-3xl text-green1 font-medium">
+                    Add Task
+                </div>
+                <div className="space-y-4">
+                    <div className='flex-col space-y-0.5'>
+                        <div>Task Name</div>
+                        <input className='h-10 border-2 border-gray' placeholder='taskname' {...register('name')}></input>
+                    </div>
+                    <div className='flex-col space-y-0.5'>
+                        <div>Description</div>
+                        <input className='h-10 border-2 border-gray' placeholder='description' {...register('description')}></input>
+                    </div>
+                    <div className='flex-col space-y-0.5'>
+                        <div>Checker ID</div>
+                        <input className='h-10 border-2 border-gray' placeholder='checkerid' {...register('checkerid')}></input>
+                    </div>
+                    <div className='flex-col space-y-0.5'>
+                        <div>Mission Span</div>
+                        <input className='h-10 border-2 border-gray' placeholder='missionspan' {...register('missionspan')}></input>
+                    </div>
+                    <div className='flex-col space-y-0.5'>
+                        <div>Task Page</div>
+                        <input className='h-10 border-2 border-gray' placeholder='taskinfoURL' {...register('taskinfoURL')}></input>
+                    </div>
+                    <div className='flex-col space-y-0.5'>
+                        <div>Test Page URL</div>
+                        <input className='h-10 border-2 border-gray' placeholder='testinfoURL' {...register('testinfoURL')}></input>
+                    </div>
+                </div>
+                <div className="w-full flex justify-center border-2">
+                    <button className='w-full px-6 py-2 rounded bg-green1' type='submit'>
+                        <div className='m-auto text-white font-medium'>
+                            Register Task
+                        </div>
+                    </button>
+                </div>
+            </form>
+        </div>
+    )
+}
+
+
+
+
+//承認申請のリスト表示コンポーネント
 const RequestList = (userstate_: UserAuthState) => {
     return(
         <div className="mx-1 my-5 space-y-5">
@@ -145,6 +229,7 @@ const RequestBlock = (props:{request_: Request, userstate_: UserAuthState}) => {
         //ここでタスク承認のAPIを実行する
         data.approval = true;
         try{
+            
             const response = await fetch('http://127.0.0.1:8000/checkandapproval',{
                 method: 'POST',
                 headers: {
@@ -189,8 +274,8 @@ const RequestBlock = (props:{request_: Request, userstate_: UserAuthState}) => {
     }
 
     return(
-        <div className="flex space-x-8 px-5 py-3 border-2 border-gray">
-            <div>
+        <div className="flex px-5 py-3 justify-between border-2 border-gray">
+            <div className="space-x-4">
                 <div>
                     {props.request_.date}
                 </div>
@@ -201,11 +286,11 @@ const RequestBlock = (props:{request_: Request, userstate_: UserAuthState}) => {
                     {props.request_.trierid}
                 </div>                        
             </div>
-            <div className="w-16">
-                <button className="w-full py-2 rounded bg-green1" onClick={onSubmitApprove}>
+            <div className="w-20 space-y-4">
+                <button className="w-full py-1 rounded bg-green1" onClick={onSubmitApprove}>
                     <div className="text-white font-medium">Approve</div>
                 </button>
-                <button className="w-full py-2 rounded bg-white border-2 border-green1" onClick={onSubmitDenial}>
+                <button className="w-full py-1 rounded bg-white border-2 border-green1" onClick={onSubmitDenial}>
                     <div className="text-green1 font-medium">Deny</div>
                 </button>
             </div>
@@ -214,88 +299,5 @@ const RequestBlock = (props:{request_: Request, userstate_: UserAuthState}) => {
 }
 
 
-//タスク追加のときに使われるモーダル
-const ModalComponent = (props: {checkerstate_: Checker, setModalOpen: any}) =>{
-    const router = useRouter()
-
-    const {
-        register,
-        handleSubmit,
-        watch,
-        formState: { errors }
-      } = useForm<AddTaskData>({
-        defaultValues: {
-            taskname: "",
-            description: "",
-            checkerid: "",
-            missionspan: 0,
-            taskinfoURL: "",
-            testinfoURL: "",
-        },
-    });    
-
-    const onSubmit: SubmitHandler<AddTaskData> = async (data: AddTaskData) => {
-        try{
-            //ここでタスク追加のAPIを実行する
-            const response = await fetch('http://127.0.0.1:8000/addtask',{
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': 'http://127.0.0.1:8000/addtask',
-                }, 
-                body: JSON.stringify(data),
-            })
-            const checker_data: any = await response.json(); //データの受け取り
-            props.checkerstate_.tasks = checker_data.tasks;
-            props.setModalOpen(false);
-        }
-        catch(e){
-            console.log(e)
-        }
-    }
-
-    return(
-        <div className="h-screen w-screen py-12 bg-black bg-opacity-20">
-            <form className='px-28 py-12 space-y-6 w-fit m-auto rounded bg-white border-2 border-gray' method="post" onSubmit={handleSubmit(onSubmit)}>
-                <div className="text-3xl text-green1 font-medium">
-                    Add Task
-                </div>
-                <div className="space-y-4">
-                    <div className='flex-col space-y-0.5'>
-                        <div>Task Name</div>
-                        <input className='h-10 border-2 border-gray' placeholder='taskname' {...register('taskname')}></input>
-                    </div>
-                    <div className='flex-col space-y-0.5'>
-                        <div>Description</div>
-                        <input className='h-10 border-2 border-gray' placeholder='description' {...register('description')}></input>
-                    </div>
-                    <div className='flex-col space-y-0.5'>
-                        <div>Checker ID</div>
-                        <input className='h-10 border-2 border-gray' placeholder='checkerid' {...register('checkerid')}></input>
-                    </div>
-                    <div className='flex-col space-y-0.5'>
-                        <div>Mission Span</div>
-                        <input className='h-10 border-2 border-gray' placeholder='missionspan' {...register('missionspan')}></input>
-                    </div>
-                    <div className='flex-col space-y-0.5'>
-                        <div>Task Page</div>
-                        <input className='h-10 border-2 border-gray' placeholder='taskinfoURL' {...register('taskinfoURL')}></input>
-                    </div>
-                    <div className='flex-col space-y-0.5'>
-                        <div>Test Page URL</div>
-                        <input className='h-10 border-2 border-gray' placeholder='testinfoURL' {...register('testinfoURL')}></input>
-                    </div>
-                </div>
-                <div className="w-full flex justify-center border-2">
-                    <button className='w-full px-6 py-2 rounded bg-green1' type='submit'>
-                        <div className='m-auto text-white font-medium'>
-                            Register Task
-                        </div>
-                    </button>
-                </div>
-            </form>
-        </div>
-    )
-}
 
 export default AccountPage_Checker;

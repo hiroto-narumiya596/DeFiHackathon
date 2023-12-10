@@ -26,10 +26,10 @@ class Commit(BaseModel):
 
 class Request(BaseModel):
     id: str
-    commitid: str
     taskid: str
     trierid: str
     checkerid: str
+    commitid: str
     date: int
 
 class Trier(BaseModel):
@@ -71,8 +71,20 @@ class CheckandApprovalData(BaseModel):
     checkerid: str
     approval: bool
 
-#サーバーサイドorチェーンサイド独自
+
+
+#ログインのときに使うデータ型
+#キャッシュサーバ受信データ
 class LoginData(BaseModel):
     user_type: str
-    name: str
-    password: str
+    id: str
+
+#キャッシュサーバ送信データ
+class CurrentTasksCommitsRequests(BaseModel):
+    tasks: List[Task]
+    commits: List[Commit]
+    requests: List[Request]
+
+
+#コミットするときに使うデータ型
+#キャッシュサーバ送信データ

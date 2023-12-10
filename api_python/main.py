@@ -6,10 +6,12 @@ import uuid
 #CORSエラー回避
 from starlette.middleware.cors import CORSMiddleware
 
-from datadifinition import LoginData, LoginState, Task, Trier, Checker, UserAuthState, AddTaskData, Request, Commit, CheckandApprovalData
+from datadifinition import LoginData, LoginState, Task, Trier, Checker, UserAuthState, AddTaskData, Request, Commit, CheckandApprovalData, CurrentTasksCommitsRequests
 
 
 # ダミーデータ
+# trier1とchecker1しかいないことを想定に作成。
+# トライヤーとチェッカーが複数いる場合は、データ構造も含めて改修が必要。
 taskinfoURL: str = "https://note.com/preview/nb4d6984e61fc?prev_access_key=80574b57237f7e28be15e33a0b066282"
 loginstate_null: LoginState = LoginState(loginstate="")
 task_null: Task = Task(id="", name="", img="", description="", checkerid="", missionspan=0, taskinfoURL="", testinfoURL="")
@@ -21,10 +23,16 @@ task2: Task = Task(id="Biufwe243NDjink", name="らくらく英単語", img="", d
 task3: Task = Task(id="siuGweV43NDjink", name="らくらく英単語", img="", description="らくらく英単語帳のP21~30までが範囲", checkerid="InjeBi12ni1NJd", missionspan=0, taskinfoURL=taskinfoURL, testinfoURL="https://docs.google.com/forms/d/e/1FAIpQLSfuW-aFOL9NEZY7F3l2OlWQH5RjvNzrYppJjhnb2JQJIcwPcA/viewform")
 trier1: Trier = Trier(id="Ugjw874NJboef", name="Ryodai", token=3000, tasks=[task1], commits=[commit1])
 checker1: Checker = Checker(id="InjeBi12ni1NJd", name="Ohmiya", token=10000, tasks=[task1, task2, task3], commits=[commit1], requests=[])
-responsedata: UserAuthState = UserAuthState(loginstate=loginstate_null,trierstate=trier_null, checkerstate=checker_null)
-logindata_trier1: LoginData = LoginData(user_type="trier",name="Ryodai",password="Ryodai1207")
-logindata_checker1: LoginData = LoginData(user_type="checker",name="Ohmiya",password="Ohmiya1207")
+
+
 checker1_tasks: List[Task] = [task1,task2,task3]
+trier1_commits: List[Commit] = [commit1]
+checker1_commits: List[Commit] = [commit1]
+checker1_requests: List[Request] = []
+logindata_trier1: LoginData = LoginData(user_type="trier",id="Ugjw874NJboef")
+logindata_checker1: LoginData = LoginData(user_type="checker",id="InjeBi12ni1NJd")
+
+
 
 
 app = FastAPI()
@@ -37,23 +45,36 @@ app.add_middleware(
     allow_headers=['*']  #ヘッダーにAccess-Control-Allow-Originが含まれるアクセスを許可
 )
 
-# ログインのデータベースサーバorチェーンサイドの処理
+
+# ログイン時のキャッシュサーバとタスクサーバ上の処理
 @app.post("/login")
 def login(data: LoginData):
+    response: CurrentTasksCommitsRequests = CurrentTasksCommitsRequests(tasks=[],commits=[],requests=[])
     try:
         if data.user_type == "trier":
-            if data.name == logindata_trier1.name and data.password == logindata_trier1.password:
-                responsedata.loginstate = LoginState(loginstate=data.user_type)
-                responsedata.trierstate = trier1
+            if data.id == logindata_trier1.id:
+                #キャッシュサーバからコミット取得
+                response.commits = trier1_commits
+
+                #タスクサーバからコミット中タスクを取得
+                for commit in response.commits:
+                    for task in checker1_tasks:
+                        if commit.taskid == task.id:
+                            response.tasks.append(task)
+
         if data.user_type == "checker":
-            if data.name == logindata_checker1.name and data.password == logindata_checker1.password:
-                responsedata.loginstate = LoginState(loginstate=data.user_type)
-                responsedata.checkerstate = checker1
+            if data.id == logindata_checker1.id:
+                #タスクサーバからコミット中タスクを取得
+                response.tasks = checker1_tasks
+
+                #キャッシュサーバからリクエスト情報取得
+                response.commits = checker1_commits
+                response.requests = checker1_requests
         
-        return responsedata.dict()
+        return response.dict()
     except:
         print(traceback.format_exc())  
-        return responsedata.dict()
+        return response.dict()
 
 
 # トライヤーがタスクをコミットする時の処理
@@ -61,55 +82,45 @@ def login(data: LoginData):
 def committask(data: Commit):
     try:
         commit_: Commit = data
-        commit_.id = str(uuid.uuid4())
+        trier1_commits.append(commit_)
 
-        if data.checkerid == "InjeBi12ni1NJd":
+        if commit_.checkerid == logindata_checker1.id:
+            checker1_commits.append(commit_)
             for task in checker1_tasks:
                 if task.id == data.taskid:
-                    trier1.tasks.append(task)
-                    trier1.commits.append(commit_)
-                    checker1.commits.append(commit_)
-                    trier1.token = trier1.token - data.bettoken
-                    return trier1.dict()
+                    return task.dict()
     except:
         print(traceback.format_exc())  
-        return trier_null.dict()
+        return task_null.dict()
 
 
 # チェッカーがタスクを追加する時の処理
 @app.post("/addtask")
-def addtask(data: AddTaskData):
+def addtask(data: Task):
     try:
-        if data.checkerid == "InjeBi12ni1NJd":
-            task: Task = Task(id=str(uuid.uuid4()), name=data.taskname, img="", description=data.description, checkerid=data.checkerid, missionspan=data.missionspan, taskinfoURL=data.taskinfoURL, testinfoURL=data.testinfoURL)
-            checker1_tasks.append(task)
-            checker1.tasks = checker1_tasks
-            return checker1
+        if data.checkerid == logindata_checker1.id:
+            data.id = str(uuid.uuid4())
+            checker1_tasks.append(data)
+            return data.dict()
     except:
         print(traceback.format_exc())
-        return checker_null.dict()       
+        return task_null.dict()    
     
 
 # コミット申請
 @app.post("/requestapproval")
 def requestapproval(data: Request):
     try:
-        if data.trierid == trier1.id:
-            for task in trier1.tasks:
-                if task.id == data.taskid:
-                    trier1.tasks.remove(task)
-            for commit in trier1.commits:
-                if commit.id == data.commitid:
-                    trier1.commits.remove(commit)
-            if  data.checkerid == checker1.id:
-                checker1.requests.append(data)
+        data.id = str(uuid.uuid4())
+        if data.trierid == logindata_checker1.id:
+            checker1_requests.append(data)
             
-            print("requestapproval")
-            return trier1.dict()
+            return data.dict()
     except:
         print(traceback.format_exc())
-        return trier1.dict()
-    
+        return data.dict()
+
+
 #コミット承認
 @app.post("/checkandapproval")
 def checkandapproval(data: CheckandApprovalData):

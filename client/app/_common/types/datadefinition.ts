@@ -27,10 +27,10 @@ export type Commit = {
 
 export type Request = {
     id: string,
-    commitid: string,
     taskid: string,
     trierid: string,
     checkerid: string,
+    commitid: string,
     date: number, 
 }
 
@@ -48,7 +48,7 @@ export type Checker = {
     token: number,
     tasks: Task[],
     commits: Commit[],
-    requests: Request[],
+    requests: Request[]
 };
 
 export type UserAuthState = {

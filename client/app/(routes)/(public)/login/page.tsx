@@ -5,26 +5,26 @@ import {useContext} from 'react';
 import {useForm, SubmitHandler } from 'react-hook-form';
 import { useRouter } from 'next/navigation';
 
-import { LoginState, Trier, Checker,UserAuthState } from '@/app/_common/types/datadefinition';
+import { LoginState, Trier, Checker,UserAuthState, Commit, Request, Task } from '@/app/_common/types/datadefinition';
 import { UserStateContext } from '@/app/_common/hooks/statemanagement';
 import Header from '@/app/_components/ui_parts/header';
 import Footer from '@/app/_components/ui_parts/footer';
 
 
 //readablestream?
+//キャッシュサーバに送信するデータ
 type Logindata = {
     user_type: string, //trier or checker
-    name: string,
-    password: string,
+    name: string, //なくても良い。ただの表示用。
+    id: string,
 };
 
-
-const defaultloginState: LoginState = {loginstate:"not login"} //not login、checker、trierのどれか
-const defaulttrier: Trier = {id:"", name:"", token:0, tasks:[], commits:[]}
-const defaultchecker: Checker = {id:"", name:"", token:0, tasks:[], commits:[], requests:[]}
-const defaultuserstate: UserAuthState = {loginstate: defaultloginState, trierstate: defaulttrier, checkerstate: defaultchecker}
-
-
+//キャッシュサーバから受信するデータ
+type CurrentTasksCommitsRequests = {
+    tasks: Task[],
+    commits: Commit[],
+    requests: Request[],
+};
 
 
 const Login = () => {
@@ -37,7 +37,7 @@ const Login = () => {
         defaultValues: {
             user_type : '',
             name : '',
-            password : '',
+            id : '',
         },
     });
 
@@ -46,11 +46,11 @@ const Login = () => {
 
     //onSubmit関数は、このコンポーネント内で定義しなければならない
     const onSubmit: SubmitHandler<Logindata> = async(data: Logindata) => {
-        
         const user_type= data.user_type;
-        console.log(JSON.stringify(data));
+        userstate_.loginstate.loginstate = user_type;
+
         try{
-            //ここでログインのAPIを実行する
+            //データベースのAPI
             const response = await fetch('http://127.0.0.1:8000/login',{
                 method: 'POST',
                 headers: {
@@ -60,18 +60,29 @@ const Login = () => {
                 body: JSON.stringify(data),
             })
     
-            const userdata: any = await response.json(); //データの受け取り
+            const currentdatas: CurrentTasksCommitsRequests = await response.json(); //データの受け取り
+
+            //チェーンのAPI
+            //チェーンからトークン残高を取得する関数を定義（さしあたり、結果だけ渡す）
+            const triertoken = 3000;
+            const checkertoken = 1300;
 
             //グローバルデータ（state）の更新
-            userstate_.loginstate = userdata.loginstate;
-            userstate_.trierstate = userdata.trierstate;
-            userstate_.checkerstate = userdata.checkerstate;
-
-            
             if(userstate_.loginstate.loginstate=="checker"){
+                userstate_.checkerstate.id = data.id
+                userstate_.checkerstate.name = data.name
+                userstate_.checkerstate.token = checkertoken
+                userstate_.checkerstate.tasks = currentdatas.tasks
+                userstate_.checkerstate.commits = currentdatas.commits
+                userstate_.checkerstate.requests = currentdatas.requests
                 router.push("/checker");
             }
             if(userstate_.loginstate.loginstate=="trier"){
+                userstate_.trierstate.id = data.id
+                userstate_.trierstate.name = data.name
+                userstate_.trierstate.token = triertoken
+                userstate_.trierstate.tasks = currentdatas.tasks
+                userstate_.trierstate.commits = currentdatas.commits              
                 router.push("/trier");
             }
         }
@@ -83,31 +94,34 @@ const Login = () => {
     return(
         <div>
             <Header {...userstate_.loginstate}/>
-            <div className='h-screen border-blue-600 border-2'>
+            <div className='h-screen py-5'>
                 <UserStateContext.Provider value={userstate_}>
-                    <form className='px-40 py-12 space-y-3 w-fit m-auto border-red-600 border-2' method="post" onSubmit={handleSubmit(onSubmit)}>
+                    <form className='px-40 py-12 space-y-4 w-fit m-auto rounded border-2 border-gray' method="post" onSubmit={handleSubmit(onSubmit)}>
                         <div className='text-3xl text-green1 font-medium'>TaCS LOGIN</div>
-                        <div className='flex-col space-y-0.5'>
-                            <div>usertype</div>
-                            <select {...register('user_type')}>
-                                <option value="trier">trier</option>
-                                <option value="checker">checker</option>
-                            </select>
-                        </div>
-                        <div className='flex-col space-y-0.5'>
-                            <div>name</div>
-                            <input className='h-10 border-2 border-gray' placeholder='name' {...register('name')}/>
-                        </div>
-                        <div className='flex-col space-y-0.5'>
-                            <div>password</div>
-                            <input className='h-10 border-2 border-gray' placeholder='password' {...register('password')}/>
-                        </div>
-                        <button className='mx-auto px-4 py-1 rounded bg-green1' type='submit'>
-                            <div className='mx-auto text-white font-medium'>
-                                log in
+                        <div className='space-y-8'>
+                            <div className='space-y-3'>
+                                <div className='flex-col space-y-0.5'>
+                                    <div>usertype</div>
+                                    <select {...register('user_type')} className='w-full h-8 border-2 border-gray'>
+                                        <option value="trier">trier</option>
+                                        <option value="checker">checker</option>
+                                    </select>
+                                </div>
+                                <div className='flex-col space-y-0.5'>
+                                    <div>name</div>
+                                    <input className='w-full h-8 border-2 border-gray' placeholder='name' {...register('name')}/>
+                                </div>
+                                <div className='flex-col space-y-0.5'>
+                                    <div>password</div>
+                                    <input className='w-full h-8 border-2 border-gray' placeholder='password' {...register('id')}/>
+                                </div>
                             </div>
-                        </button>
-                        
+                            <button className='w-full py-2 rounded bg-green1' type='submit'>
+                                <div className='mx-auto text-white font-medium'>
+                                    log in
+                                </div>
+                            </button>
+                        </div>
                     </form>
                 </UserStateContext.Provider>
             </div>

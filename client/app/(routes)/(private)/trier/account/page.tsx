@@ -64,7 +64,7 @@ const TaskList = (userstate_: UserAuthState) => {
     return (
         <div className="mx-1 my-5 space-y-5">
                 <div className="text-3xl font-semibold">List of Committed Tasks</div>
-                <div className="space-y-3">
+                <div className="space-y-3 justify-between">
                     {userstate_.trierstate.tasks.map((task)=>(
                         <TaskBlock {...task} key={task.id}/>
                     ))}
@@ -120,7 +120,19 @@ const ModalComponent = (props: {trierstate_: Trier, setModalOpen: any}) => {
     const onSubmit: SubmitHandler<Commit> = async (data: Commit) => {
         console.log(data)
         try{
-            //ここでタスクコミットのAPIを実行する
+            //チェーンのAPI
+            //以下の3つの要件を満たした、コミットを行う関数を定義（さしあたり、結果だけ渡す）
+            //コミット固有のIDを取得する
+            //タスクIDを使ってチェーンから、チェッカーIDを取得する
+            //コミット後のトークン残高を取得する
+            const commitID: string = "";
+            const checkerID: string = "InjeBi12ni1NJd";
+            const res_token: number = props.trierstate_.token - data.bettoken;
+
+            data.id = commitID;
+            data.checkerid = checkerID;
+
+            //データベースのAPI
             const response = await fetch('http://127.0.0.1:8000/addcommittask',{
                 method: 'POST',
                 headers: {
@@ -129,10 +141,14 @@ const ModalComponent = (props: {trierstate_: Trier, setModalOpen: any}) => {
                 }, 
                 body: JSON.stringify(data),
             })
-            const trier_data: Trier = await response.json(); //データの受け取り
-            props.trierstate_.tasks = trier_data.tasks;
-            props.trierstate_.commits = trier_data.commits;
-            props.trierstate_.token = trier_data.token;
+            const task_data: Task = await response.json();
+
+
+            //クライアント側の状態データの更新
+            props.trierstate_.token = res_token;
+            props.trierstate_.tasks.push(task_data);
+            props.trierstate_.commits.push(data);
+
             props.setModalOpen(false);
         }
         catch(e){
@@ -151,10 +167,6 @@ const ModalComponent = (props: {trierstate_: Trier, setModalOpen: any}) => {
                     <div className='flex-col space-y-0.5'>
                         <div>Task ID</div>
                         <input className='h-10 border-2 border-gray' placeholder='taskid' {...register('taskid')}></input>
-                    </div>
-                    <div className='flex-col space-y-0.5'>
-                        <div>Checker ID</div>
-                        <input className='h-10 border-2 border-gray' placeholder='checkerid' {...register('checkerid')}></input>
                     </div>
                     <div className='flex-col space-y-0.5'>
                         <div>Bet Token</div>

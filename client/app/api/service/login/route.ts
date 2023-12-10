@@ -1,3 +1,4 @@
+/*
 import { NextResponse } from "next/server";
 import { NextApiRequest, NextApiResponse } from "next"; 
 import { LoginState, Task, Trier, Checker, UserAuthState } from '@/app/_common/types/datadefinition';
@@ -62,14 +63,13 @@ export async function POST(req: NextApiRequest , res: NextApiResponse<UserAuthSt
             });
         }
         else{
-            /*
             console.log("ok_api1")
             res.status(405).json({
                 error: {
                   message: `Method ${req.method} Not Allowed1`,
                   statusCode: 405,
                 },
-              });*/
+              });
         }
     }
     else if(req.body.user_type == 'checker'){
@@ -82,16 +82,15 @@ export async function POST(req: NextApiRequest , res: NextApiResponse<UserAuthSt
             });
         }
         else{
-            /*
-            res.status(405).json({
+                        res.status(405).json({
                 error: {
                   message: `Method ${req.method} Not Allowed2`,
                   statusCode: 405,
                 },
-              });*/
+              });
         }
     }else{
-        /*
+
         console.log("ok_api0else")
         res.status(405).json({
             
@@ -99,6 +98,7 @@ export async function POST(req: NextApiRequest , res: NextApiResponse<UserAuthSt
               message: `Method Not Allowed3`,
               statusCode: 405,
             },
-          });*/
+          });
     }
 }
+*/

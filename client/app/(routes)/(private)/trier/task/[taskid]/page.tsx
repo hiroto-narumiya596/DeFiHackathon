@@ -53,10 +53,9 @@ const TaskPage = ({ params }: { params: {taskid: string }}) => {
                 body: JSON.stringify(data),
             })
 
-            const res_data: Trier = await response.json();
-            userstate_.trierstate = res_data
+            const res_data: Request = await response.json();
             router.push("/trier/account")
-            console.log("Yes")
+            console.log(res_data)
         }
         catch(e){
             console.log(e);
