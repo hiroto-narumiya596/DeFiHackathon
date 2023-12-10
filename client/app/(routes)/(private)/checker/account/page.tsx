@@ -7,11 +7,11 @@ import {useForm, SubmitHandler } from 'react-hook-form';
 import Header from "@/app/_components/ui_parts/header"
 import Footer from "@/app/_components/ui_parts/footer"
 import { UserStateContext } from "@/app/_common/hooks/statemanagement"
-import { UserAuthState, Task, Checker } from "@/app/_common/types/datadefinition"
+import { UserAuthState, Task, Checker, Request } from "@/app/_common/types/datadefinition"
 import ServiceIcon from "source/img/serviceicon1.svg"
 import UserIcon from "source/img/usericon.svg"
 
-
+//タスク追加のときに使われる
 type AddTaskData = {
     taskname: string,
     description: string,
@@ -20,6 +20,15 @@ type AddTaskData = {
     taskinfoURL: string,
     testinfoURL: string,
 }
+
+//タスク承認のときに使われる
+type CheckandApprovalData = {
+    requestid: string,
+    trierid: string,
+    checkerid: string,
+    approval: boolean,
+}
+
 
 
 
@@ -47,25 +56,27 @@ const AccountPage_Checker_Body = (userstate_: UserAuthState) => {
                 <ModalComponent checkerstate_={checkerstate_} setModalOpen={setModalOpen}/>
             </div>:<></>}
             <div className="px-32 py-6">
-            <div className="text-4xl font-bold">Account Information</div>
-            <div className="flex space-x-8 my-5">
-                <Image src={UserIcon} className="h-28 w-28 m-5" alt="UserIcon"/>
-                <div className="space-y-4">
-                    <div className="space-y-1">
-                        <div>name</div>
-                        <div className="text-xl font-medium">{checkerstate_.name}</div>
-                    </div>
-                    <div className="space-y-1">
-                        <div>token</div>
-                        <div className="text-xl font-medium">{checkerstate_.token}</div>
+                <div className="text-4xl font-bold">Account Information</div>
+                <div className="flex space-x-8 my-5">
+                    <Image src={UserIcon} className="h-28 w-28 m-5" alt="UserIcon"/>
+                    <div className="space-y-4">
+                        <div className="space-y-1">
+                            <div>name</div>
+                            <div className="text-xl font-medium">{checkerstate_.name}</div>
+                        </div>
+                        <div className="space-y-1">
+                            <div>token</div>
+                            <div className="text-xl font-medium">{checkerstate_.token}</div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <hr className="border-gray-400"></hr>
-            <TaskList {...userstate_}/>
-            <button className="w-fit h-fit px-4 py-2 rounded bg-green1" onClick={() => {setModalOpen(true)}}>
-                <div className="text-xl text-semibold text-white">新規タスク追加</div>
-            </button>            
+                <hr className="border-gray-400"></hr>
+                <TaskList {...userstate_}/>
+                <button className="w-fit h-fit px-4 py-2 rounded bg-green1" onClick={() => {setModalOpen(true)}}>
+                    <div className="text-xl text-semibold text-white">新規タスク追加</div>
+                </button>
+                <hr className="border-gray-400"></hr>
+                <RequestList {...userstate_}/>            
             </div>
         </div>
     )
@@ -74,7 +85,7 @@ const AccountPage_Checker_Body = (userstate_: UserAuthState) => {
 const TaskList = (userstate_: UserAuthState) => {
     return (
         <div className="mx-1 my-5 space-y-5">
-                <div className="text-3xl font-semibold">List of Committed Tasks</div>
+                <div className="text-3xl font-semibold">List of Tasks</div>
                 <div className="space-y-3">
                     {userstate_.checkerstate.tasks.map((task)=>(
                         <TaskBlock {...task} key={task.id}/>
@@ -83,8 +94,6 @@ const TaskList = (userstate_: UserAuthState) => {
             </div>
     )
 }
-
-
 
 const TaskBlock = (task_: Task) => {
 
@@ -109,6 +118,103 @@ const TaskBlock = (task_: Task) => {
     )
 }
 
+const RequestList = (userstate_: UserAuthState) => {
+    return(
+        <div className="mx-1 my-5 space-y-5">
+            <div className="text-3xl font-semibold">List of Requests</div>
+                <div className="space-y-3">
+                    {userstate_.checkerstate.requests.map((request)=>(
+                        <RequestBlock request_={request} userstate_={userstate_} key={request.id}/>
+                    ))}
+            </div>
+        </div>
+    )
+}
+
+const RequestBlock = (props:{request_: Request, userstate_: UserAuthState}) => {
+    const router = useRouter();
+
+    const data: CheckandApprovalData = {
+        requestid: props.request_.id,
+        trierid: props.request_.trierid,
+        checkerid: props.request_.checkerid,
+        approval: false,
+    }     
+    
+    const onSubmitApprove = async() => {
+        //ここでタスク承認のAPIを実行する
+        data.approval = true;
+        try{
+            const response = await fetch('http://127.0.0.1:8000/checkandapproval',{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': 'http://127.0.0.1:8000/checkandapproval',
+                }, 
+                body: JSON.stringify(data),
+            })
+            const checker_data: Checker = await response.json(); //データの受け取り
+
+            props.userstate_.checkerstate.commits = checker_data.commits;
+            props.userstate_.checkerstate.requests = checker_data.requests;
+            props.userstate_.checkerstate.token = checker_data.token;
+
+            console.log("Approval確認")
+            console.log(props.userstate_.checkerstate);
+            router.push("/checker");
+        }
+        catch(e){
+            console.log(e);
+        }
+    }
+
+    const onSubmitDenial = async() => {
+        data.approval = false;
+        try{
+            const response = await fetch('http://127.0.0.1:8000/checkandapproval',{
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': 'http://127.0.0.1:8000/checkandapproval',
+                }, 
+                body: JSON.stringify(data),
+            })   
+            const checker_data: Checker = await response.json(); //データの受け取り
+
+            props.userstate_.checkerstate = checker_data;
+        }
+        catch(e){
+            console.log(e);
+        }   
+    }
+
+    return(
+        <div className="flex space-x-8 px-5 py-3 border-2 border-gray">
+            <div>
+                <div>
+                    {props.request_.date}
+                </div>
+                <div>
+                    {props.request_.taskid}
+                </div>        
+                <div>
+                    {props.request_.trierid}
+                </div>                        
+            </div>
+            <div className="w-16">
+                <button className="w-full py-2 rounded bg-green1" onClick={onSubmitApprove}>
+                    <div className="text-white font-medium">Approve</div>
+                </button>
+                <button className="w-full py-2 rounded bg-white border-2 border-green1" onClick={onSubmitDenial}>
+                    <div className="text-green1 font-medium">Deny</div>
+                </button>
+            </div>
+        </div>
+    )
+}
+
+
+//タスク追加のときに使われるモーダル
 const ModalComponent = (props: {checkerstate_: Checker, setModalOpen: any}) =>{
     const router = useRouter()
 

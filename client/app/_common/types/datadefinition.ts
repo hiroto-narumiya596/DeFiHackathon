@@ -16,11 +16,30 @@ export type Task = {
     testinfoURL: string,    
 };
 
+export type Commit = {
+    id: string,
+    taskid: string,
+    checkerid: string,
+    trierid: string,
+    date: number,
+    bettoken: number,
+}
+
+export type Request = {
+    id: string,
+    commitid: string,
+    taskid: string,
+    trierid: string,
+    checkerid: string,
+    date: number, 
+}
+
 export type Trier = {
     id: string,
     name: string,
     token: number,
     tasks: Task[],
+    commits: Commit[],
 };
 
 export type Checker = {
@@ -28,6 +47,8 @@ export type Checker = {
     name: string,
     token: number,
     tasks: Task[],
+    commits: Commit[],
+    requests: Request[],
 };
 
 export type UserAuthState = {

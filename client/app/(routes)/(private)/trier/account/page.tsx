@@ -7,17 +7,10 @@ import {useForm, SubmitHandler } from 'react-hook-form';
 import Header from "@/app/_components/ui_parts/header"
 import Footer from "@/app/_components/ui_parts/footer"
 import { UserStateContext } from "@/app/_common/hooks/statemanagement"
-import { UserAuthState, Task, Trier } from "@/app/_common/types/datadefinition"
+import { UserAuthState, Task, Trier, Commit } from "@/app/_common/types/datadefinition"
 import ServiceIcon from "source/img/serviceicon1.svg"
 import UserIcon from "source/img/usericon.svg"
 
-
-
-type AddCommitTaskData = {
-    taskid: string,
-    checkerid: string,
-    trierid: string,
-}
 
 
 
@@ -103,6 +96,8 @@ const TaskBlock = (task_: Task) => {
     )
 }
 
+
+//コミット用のモーダル
 const ModalComponent = (props: {trierstate_: Trier, setModalOpen: any}) => {
     const router = useRouter()
 
@@ -111,15 +106,19 @@ const ModalComponent = (props: {trierstate_: Trier, setModalOpen: any}) => {
         handleSubmit,
         watch,
         formState: { errors }
-      } = useForm<AddCommitTaskData>({
+      } = useForm<Commit>({
         defaultValues: {
+            id: '',
             taskid : '',
             checkerid : '',
-            trierid: '',
+            trierid: props.trierstate_.id,
+            bettoken: 0,
+            date: 0,
         },
     });    
 
-    const onSubmit: SubmitHandler<AddCommitTaskData> = async (data: AddCommitTaskData) => {
+    const onSubmit: SubmitHandler<Commit> = async (data: Commit) => {
+        console.log(data)
         try{
             //ここでタスクコミットのAPIを実行する
             const response = await fetch('http://127.0.0.1:8000/addcommittask',{
@@ -130,8 +129,10 @@ const ModalComponent = (props: {trierstate_: Trier, setModalOpen: any}) => {
                 }, 
                 body: JSON.stringify(data),
             })
-            const trier_data: any = await response.json(); //データの受け取り
+            const trier_data: Trier = await response.json(); //データの受け取り
             props.trierstate_.tasks = trier_data.tasks;
+            props.trierstate_.commits = trier_data.commits;
+            props.trierstate_.token = trier_data.token;
             props.setModalOpen(false);
         }
         catch(e){
@@ -155,6 +156,10 @@ const ModalComponent = (props: {trierstate_: Trier, setModalOpen: any}) => {
                         <div>Checker ID</div>
                         <input className='h-10 border-2 border-gray' placeholder='checkerid' {...register('checkerid')}></input>
                     </div>
+                    <div className='flex-col space-y-0.5'>
+                        <div>Bet Token</div>
+                        <input className='h-10 border-2 border-gray' placeholder='0' {...register('bettoken')}></input>
+                    </div>                    
                 </div>
                 <div className="w-full flex justify-center border-2">
                     <button className='w-full px-6 py-2 rounded bg-green1' type='submit'>
@@ -168,7 +173,6 @@ const ModalComponent = (props: {trierstate_: Trier, setModalOpen: any}) => {
     )
 }
 
-//{isModalOpen?<div className="z-10"><ModalComponent {...userstate_}/></div>:<></>}
 
 
 export default AccountPage_Trier;

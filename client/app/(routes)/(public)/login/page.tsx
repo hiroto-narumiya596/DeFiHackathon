@@ -20,8 +20,8 @@ type Logindata = {
 
 
 const defaultloginState: LoginState = {loginstate:"not login"} //not login、checker、trierのどれか
-const defaulttrier: Trier = {id:"", name:"", token:0, tasks:[]}
-const defaultchecker: Checker = {id:"", name:"", token:0, tasks:[]}
+const defaulttrier: Trier = {id:"", name:"", token:0, tasks:[], commits:[]}
+const defaultchecker: Checker = {id:"", name:"", token:0, tasks:[], commits:[], requests:[]}
 const defaultuserstate: UserAuthState = {loginstate: defaultloginState, trierstate: defaulttrier, checkerstate: defaultchecker}
 
 
@@ -67,7 +67,6 @@ const Login = () => {
             userstate_.trierstate = userdata.trierstate;
             userstate_.checkerstate = userdata.checkerstate;
 
-            console.log(userstate_.checkerstate)
             
             if(userstate_.loginstate.loginstate=="checker"){
                 router.push("/checker");
@@ -123,54 +122,3 @@ export default Login;
 
 
 
-
-/*
-//import { useRouter } from 'next/router'
-//import { useSession, signIn, signOut, SessionProvider } from 'next-auth/react'
-//import { useSearchParams } from 'next/navigation';
-const Login = () => {
-
-    const {error} = useSearchParams().size
-    const {data: session, status }  = useSession();
-  
-    return (
-      <div>
-        <h1>カスタムログインページ</h1>
-        {session ? (
-          // ログイン状態の場合。ユーザー名、ログアウトボタンを表示。
-          <>
-            <div>ユーザー：{session.user?.name}</div>
-            <button onClick={() => signOut()}>ログアウト</button>
-          </>
-        ) : (
-          // ログアウト状態の場合。入力フォームを表示。
-          <form method='post' action={() => signIn()}>
-            <label>
-              <div>name</div>
-              <input name='login' />
-            </label>
-            <label>
-              <div>password</div>
-              <input name='password' type='password' />
-            </label>
-            <div>
-              <button type='submit'>ログイン</button>
-            </div>
-            
-            {error && <div>ログインID又はパスワードが間違っています。</div>}
-          </form>
-        )}
-      </div>
-    )
-}
-//getserversideprops削除（App Routerでは廃止のため）
-const LoginPage = () => {
-    return(
-        
-        <SessionProvider>
-            <Login/>
-        </SessionProvider>
-        
-    )
-}
-*/
