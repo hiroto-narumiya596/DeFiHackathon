@@ -7,22 +7,21 @@ import {useForm, SubmitHandler } from 'react-hook-form';
 import Header from "@/app/_components/ui_parts/header"
 import Footer from "@/app/_components/ui_parts/footer"
 import { UserStateContext } from "@/app/_common/hooks/statemanagement"
-import { UserAuthState, Task, Checker, Request } from "@/app/_common/types/datadefinition"
+import { UserAuthState, Task, Checker, Request, Commit } from "@/app/_common/types/datadefinition"
 import ServiceIcon from "source/img/serviceicon1.svg"
 import UserIcon from "source/img/usericon.svg"
+import { exit } from "process";
 
 
 
 //タスク承認のときに使われる
 type CheckandApprovalData = {
     requestid: string,
+    commitid: string,
     trierid: string,
     checkerid: string,
-    approval: boolean,
-}
-
-
-
+    approval: boolean, //承認非承認
+};
 
 const AccountPage_Checker = () => {
     const userstate_ = useContext(UserStateContext)    
@@ -198,9 +197,6 @@ const ModalComponent = (props: {checkerstate_: Checker, setModalOpen: any}) =>{
     )
 }
 
-
-
-
 //承認申請のリスト表示コンポーネント
 const RequestList = (userstate_: UserAuthState) => {
     return(
@@ -220,16 +216,50 @@ const RequestBlock = (props:{request_: Request, userstate_: UserAuthState}) => {
 
     const data: CheckandApprovalData = {
         requestid: props.request_.id,
+        commitid: props.request_.commitid,
         trierid: props.request_.trierid,
         checkerid: props.request_.checkerid,
         approval: false,
-    }     
-    
-    const onSubmitApprove = async() => {
-        //ここでタスク承認のAPIを実行する
-        data.approval = true;
+    }
+
+
+    const onSubmit = async(e: any) => {
+        console.log(e.target.id)
+
+        //承認非承認を決める
+        if(e.target.id == "Approval"){
+            console.log(true)
+            data.approval = true;
+        }
+        else if(e.target.id == "Denial"){
+            data.approval = false;
+        }
+
+        /*
+        for(let req of props.userstate_.checkerstate.requests){
+            if (req.id == data.requestid){
+                props.userstate_.checkerstate.requests.push(req);
+                break;
+            } 
+        }
+        for(let commit_ of props.userstate_.checkerstate.commits){
+            if (commit_.id == props.request_.commitid){
+                props.userstate_.checkerstate.commits.push(commit_);
+                break;
+            }
+        }*/
+
+
+        //チェーンのAPI
+        //要件は以下の通り
+        //チェーン上のコミットに、コミットID(props.request_commitid)でアクセス
+        //アクセスしたコミットに、承認・非承認（isApprovalの結果）を渡す
+        //チェッカーのトークン残高を取得する
+        props.userstate_.checkerstate.token = 100005;
+
+
+
         try{
-            
             const response = await fetch('http://127.0.0.1:8000/checkandapproval',{
                 method: 'POST',
                 headers: {
@@ -238,40 +268,19 @@ const RequestBlock = (props:{request_: Request, userstate_: UserAuthState}) => {
                 }, 
                 body: JSON.stringify(data),
             })
-            const checker_data: Checker = await response.json(); //データの受け取り
+            const checker_data: any = await response.json(); //データの受け取り
 
             props.userstate_.checkerstate.commits = checker_data.commits;
             props.userstate_.checkerstate.requests = checker_data.requests;
-            props.userstate_.checkerstate.token = checker_data.token;
 
-            console.log("Approval確認")
             console.log(props.userstate_.checkerstate);
-            router.push("/checker");
+            router.push("/checker");            
         }
-        catch(e){
-            console.log(e);
+        catch(error){
+            console.log(error);
         }
     }
-
-    const onSubmitDenial = async() => {
-        data.approval = false;
-        try{
-            const response = await fetch('http://127.0.0.1:8000/checkandapproval',{
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': 'http://127.0.0.1:8000/checkandapproval',
-                }, 
-                body: JSON.stringify(data),
-            })   
-            const checker_data: Checker = await response.json(); //データの受け取り
-
-            props.userstate_.checkerstate = checker_data;
-        }
-        catch(e){
-            console.log(e);
-        }   
-    }
+    
 
     return(
         <div className="flex px-5 py-3 justify-between border-2 border-gray">
@@ -287,11 +296,11 @@ const RequestBlock = (props:{request_: Request, userstate_: UserAuthState}) => {
                 </div>                        
             </div>
             <div className="w-20 space-y-4">
-                <button className="w-full py-1 rounded bg-green1" onClick={onSubmitApprove}>
-                    <div className="text-white font-medium">Approve</div>
+                <button className="w-full py-1 rounded bg-green1" onClick={e => onSubmit(e)}>
+                    <div  id="Approval" className="text-white font-medium">Approve</div>
                 </button>
-                <button className="w-full py-1 rounded bg-white border-2 border-green1" onClick={onSubmitDenial}>
-                    <div className="text-green1 font-medium">Deny</div>
+                <button className="w-full py-1 rounded bg-white border-2 border-green1" onClick={e => onSubmit(e)}>
+                    <div id="Denial" className="text-green1 font-medium">Deny</div>
                 </button>
             </div>
         </div>

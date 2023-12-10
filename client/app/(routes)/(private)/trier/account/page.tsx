@@ -125,7 +125,7 @@ const ModalComponent = (props: {trierstate_: Trier, setModalOpen: any}) => {
             //コミット固有のIDを取得する
             //タスクIDを使ってチェーンから、チェッカーIDを取得する
             //コミット後のトークン残高を取得する
-            const commitID: string = "";
+            const commitID: string = "wdbHBJKbwc";
             const checkerID: string = "InjeBi12ni1NJd";
             const res_token: number = props.trierstate_.token - data.bettoken;
 
@@ -148,6 +148,7 @@ const ModalComponent = (props: {trierstate_: Trier, setModalOpen: any}) => {
             props.trierstate_.token = res_token;
             props.trierstate_.tasks.push(task_data);
             props.trierstate_.commits.push(data);
+            
 
             props.setModalOpen(false);
         }

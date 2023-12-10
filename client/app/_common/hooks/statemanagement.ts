@@ -9,8 +9,4 @@ const defaultuserstate: UserAuthState = {loginstate: defaultloginState, triersta
 
 //初期設定
 export const UserStateContext = createContext<UserAuthState>(defaultuserstate);
-/*
-export const loginstate = createContext(defaultloginState);
-export const trier = createContext([defaulttrier, (data: Trier)=>{}]);
-export const checker = createContext([defaultchecker, (data: Checker)=>{}]);
-*/
+
