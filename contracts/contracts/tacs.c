@@ -139,26 +139,20 @@
 #define PAY_TX_TAG 0x53436154U // "TaCS" in LE ASCII
 #define TOKEN_CODE "TCS"
 
-#define SVAR(x) &x, sizeof(x)
-
-#define DONE(x)\
-    accept(SBUF(x), __LINE__);
-
 #define NOPE(x)\
-    rollback(SBUF(x), __LINE__);
-
-#define ASSERT(x)\
-    if (!(x))\
-        rollback(SBUF("Tacs: Assertion failed."), __LINE__);
+{\
+    return rollback((x), sizeof(x), __LINE__);\
+}
 
 #define COPYBUF(buf1, buf2, num)\
 {\
     for(int x = 0; GUARD(num), x < num; ++x)\
-        buf2[x] = buf1[x];\
+        ((uint8_t *)(buf2))[x] = ((uint8_t *)(buf1))[x];\
 }
 
-#define UINT64_TO_XFL_ROUND(ui, xfl)\
+#define UINT64_TO_XFL_ROUND(ui0, xfl)\
 {\
+    uint32_t ui = ui0;\
     ui = ui | (ui >> 1);\
     ui = ui | (ui >> 2);\
     ui = ui | (ui >> 4);\
@@ -166,26 +160,26 @@
     ui = ui | (ui >> 16);\
     ui = ui | (ui >> 32);\
     uint32_t di = (ui ^ (ui >> 1)) >> 31;\
-    xfl = di > 0 ? float_mulratio(float_mulratio(float_one(), 0, (uint32_t)(ui / (uint64_t)di), 1UL), 0, di, 1UL) : float_mulratio(float_one(), 0, ui, 1UL);\
+    xfl = di > 0 ? float_mulratio(float_mulratio(float_one(), 0, (uint32_t)(ui0 / (uint64_t)di), 1UL), 0, di, 1UL) : float_mulratio(float_one(), 0, ui0, 1UL);\
 }
 
 int64_t hook(uint32_t reserved) {
     _g(1, 1);
-    extn_reserve(2);
+    etxn_reserve(2);
 
     uint8_t hook_accid[20];
     hook_account(hook_accid, 20);
 
     uint8_t account_field[20];
     int32_t account_field_len = otxn_field(SBUF(account_field), sfAccount);
-    if (account_field_ken < 20) {
+    if (account_field_len < 20) {
         rollback(SBUF("Tacs: The account field is missing."), 1);
     }
 
     int64_t tt = otxn_type();
 
-    int equal = 0; ACCOUNT_COMPARE(equal, hook_accid, account_field);
-    if (!equal) {
+    int acc_cmp_incoming = 0; ACCOUNT_COMPARE(acc_cmp_incoming, hook_accid, account_field);
+    if (acc_cmp_incoming) {
         // Incoming txn
         if (tt == ttINVOKE) {
             // Check if this ttINVOKE is the first one
@@ -197,6 +191,7 @@ int64_t hook(uint32_t reserved) {
                 uint8_t first_a[20];
                 uint64_t first_u;
                 int64_t first_t, first_k, first_r;
+                uint64_t first_zero = 0ULL;
 
                 ASSERT(hook_param(SBUF(first_a), "a", 1) > 0);
                 ASSERT(hook_param(SVAR(first_t), "t", 1) > 0);
@@ -205,10 +200,13 @@ int64_t hook(uint32_t reserved) {
                 ASSERT(hook_param(SVAR(first_r), "r", 1) > 0);
 
                 ASSERT(state_set(SBUF(first_a), "a", 1) > 0);
-                ASSERT(state_set(SVAR(first_s), "t", 1) > 0);
+                ASSERT(state_set(SVAR(first_t), "t", 1) > 0);
                 ASSERT(state_set(SVAR(first_u), "u", 1) > 0);
                 ASSERT(state_set(SVAR(first_k), "k", 1) > 0);
                 ASSERT(state_set(SVAR(first_r), "r", 1) > 0);
+
+                ASSERT(state_set(SVAR(first_zero), "s", 1) > 0);
+                ASSERT(state_set(SVAR(first_zero), "l", 1) > 0);
 
                 DONE("Tacs: Successfully initialized.");
             }
@@ -220,14 +218,14 @@ int64_t hook(uint32_t reserved) {
             REQUIRE(otxn_param(SBUF(command_name), "0", 1) > 0, "Tacs: The command name is not specified.");
 
             switch (command_name[0]) {
-                case 'M':
+                case 'M': {
                     // Update a meta parameter
 
                     // Check if the caller is the admin
                     uint8_t admin_accid[20];
                     ASSERT(state(SBUF(admin_accid), "a", 1) > 0);
-                    int equal_com_m = 0; ACCOUNT_COMPARE(equal_com_m, admin_accid, account_field);
-                    REQUIRE(equal_com_m, "Tacs: The meta parameters can be modified only by the admin.");
+                    int acc_cmp = 0; ACCOUNT_COMPARE(acc_cmp, admin_accid, account_field);
+                    REQUIRE(!acc_cmp, "Tacs: The meta parameters can be modified only by the admin.");
 
                     // Set the parameter
                     uint8_t meta_name;
@@ -239,15 +237,15 @@ int64_t hook(uint32_t reserved) {
 
                     DONE("Tacs: The parameter is successfully updated.");
                     break;
-
-                case 'A':
+                }
+                case 'A': {
                     // Change the permission of a checker account
 
                     // Check if the caller is the admin
                     uint8_t admin_accid[20];
                     ASSERT(state(SBUF(admin_accid), "a", 1) > 0);
-                    int equal_com_a = 0; ACCOUNT_COMPARE(equal_com_m, admin_accid, account_field);
-                    REQUIRE(equal_com_m, "Tacs: The checker permission can be modified only by the admin.");
+                    int acc_cmp = 0; ACCOUNT_COMPARE(acc_cmp, admin_accid, account_field);
+                    REQUIRE(!acc_cmp, "Tacs: The checker permission can be modified only by the admin.");
 
                     // Set the checker permission
                     uint8_t checker_accid[20];
@@ -255,8 +253,10 @@ int64_t hook(uint32_t reserved) {
                     REQUIRE(otxn_param(SBUF(checker_accid), "A", 1) > 0, "Tacs: The checker account is not specified.");
                     REQUIRE(otxn_param(SVAR(checker_permission), "P", 1) > 0, "Tacs: The new permission is not specified.");
 
-                    uint8_t checker_s_key[32]; CLEARBUF(checker_s_key);
+                    uint8_t checker_s_key[32];
                     checker_s_key[0] = 'A';
+                    for (int i = 1; GUARD(11), i < 12; ++i)
+                        checker_s_key[i] = '\0';
                     COPYBUF(checker_accid, checker_s_key + 12, 20);
 
                     uint64_t checker_data[2];
@@ -267,22 +267,22 @@ int64_t hook(uint32_t reserved) {
                         checker_data[1] = 0ULL;
                     }
                     checker_data[0] = checker_permission;
-                    ASSERT(state_set(SBUF(checker_data), checker_s_key));
+                    ASSERT(state_set(SBUF(checker_data), SBUF(checker_s_key)) > 0);
                 
                     DONE("Tacs: The checker permission is successfully updated.");
                     break;
-
-                case 'T':
+                }
+                case 'T': {
                     // Create a task
 
                     // Check if the caller is a checker
                     uint8_t checker_s_key[32];
                     checker_s_key[0] = 'A';
-                    for (int i = 1; GUARD(7), i < 8; ++i)
+                    for (int i = 1; GUARD(11), i < 12; ++i)
                         checker_s_key[i] = '\0';
                     COPYBUF(account_field, checker_s_key + 12, 20);
                     uint64_t checker_data[2];
-                    ASSERT(state(SBUF(checker_data), SBUF(checker_s_key)) > 0);
+                    REQUIRE(state(SBUF(checker_data), SBUF(checker_s_key)) > 0, "Tacs: The checker data is not found.");
                     REQUIRE(checker_data[0] == 1ULL, "Tacs: Only checkers can create tasks.");
                     ASSERT(checker_data[1] < UINT64_MAX);
 
@@ -299,6 +299,7 @@ int64_t hook(uint32_t reserved) {
                         task_s_key[i] = '\0';
                     COPYBUF(account_field, task_s_key + 4, 20);
                     COPYBUF(checker_data + 1, task_s_key + 24, 8);
+                    TRACEHEX(task_s_key);
 
                     uint8_t task_s_data[64];
                     *((uint64_t *)task_s_data) = 1ULL;
@@ -315,8 +316,8 @@ int64_t hook(uint32_t reserved) {
 
                     DONE("Tacs: The task is added.");
                     break;
-
-                case 'U':
+                }
+                case 'U': {
                     // Update the state of a task
                     
                     // Load otxn parameters
@@ -327,8 +328,8 @@ int64_t hook(uint32_t reserved) {
                     REQUIRE(task_new_state < 2, "Tacs: Invalid task state.");
 
                     // Check the condition
-                    int equal_acc; ACCOUNT_COMPARE(equal_acc, task_id, account_field);
-                    REQUIRE(equal_acc, "Tacs: The task's state can be modified only by its checker.");
+                    int acc_cmp; ACCOUNT_COMPARE(acc_cmp, task_id, account_field);
+                    REQUIRE(!acc_cmp, "Tacs: The task's state can be modified only by its checker.");
 
                     // Load the task state
                     uint8_t task_s_key[32];
@@ -347,8 +348,8 @@ int64_t hook(uint32_t reserved) {
 
                     DONE("Tacs: The task state is updated.");
                     break;
-
-                case 'C':
+                }
+                case 'C': {
                     // Create a new commitment
 
                     // Load otxn parameters
@@ -356,17 +357,23 @@ int64_t hook(uint32_t reserved) {
                     int64_t commit_lock_amount;
                     REQUIRE(otxn_param(SBUF(commit_task_id), "I", 1) > 0, "Tacs: The id of the task is missing");
                     REQUIRE(otxn_param(SVAR(commit_lock_amount), "L", 1) > 0, "Tacs: The lock amount is missing");
+                    TRACEXFL(commit_lock_amount);//debug
 
                     // Load state parameters
                     uint8_t trier_s_key[32];
                     trier_s_key[0] = 'B';
-                    for (int i = 1; GUARD(7), i < 8; ++i)
+                    for (int i = 1; GUARD(11), i < 12; ++i)
                         trier_s_key[i] = '\0';
                     COPYBUF(account_field, trier_s_key + 12, 20);
                     uint64_t trier_s_data[2];
                     REQUIRE(state(SBUF(trier_s_data), SBUF(trier_s_key)) > 0, "Tacs: The trier balance is not created.");
                     ASSERT(trier_s_data[0] < UINT64_MAX);
-                    REQUIRE(fload_compare((int64_t)trier_s_data[1], commit_lock_amount, COMPARE_GREATER | COMPARE_EQUAL) == 1, "Tacs: The trier balance is insufficient to lock");
+                    int32_t cmp_res = float_compare((int64_t)trier_s_data[1], commit_lock_amount, COMPARE_GREATER | COMPARE_EQUAL);
+                    if (cmp_res == 0) {
+                        NOPE("Tacs: The trier balance is insufficient to lock");
+                    } else if (cmp_res < 0) {
+                        NOPE("Tacs: Invalid lock amount");
+                    }
 
                     uint8_t task_s_key[32];
                     task_s_key[0] = 'T';
@@ -386,8 +393,7 @@ int64_t hook(uint32_t reserved) {
                     int64_t task_time, last_time;
                     last_time = ledger_last_time();
                     COPYBUF(task_s_data + 40, &task_time, 8);
-
-                    ASSERT(task_time >= 0 && INT64_MAX - task_time < last_time);
+                    ASSERT(task_time >= 0 && INT64_MAX - task_time > last_time);
                     int64_t commit_due = last_time + task_time;
 
                     // Calculate trier reward
@@ -408,7 +414,8 @@ int64_t hook(uint32_t reserved) {
                     uint64_t commit_interval_num = task_time / time_unit;
                     ASSERT(commit_interval_num <= UINT32_MAX);
 
-                    int64_t commit_trier_reward_rate = float_mulratio(float_divide(float_sum(float_multiply(k_val, float_divide(float_sum(target_supply, float_negate(total_supply)), locked_supply)), float_sum(float_one(), float_negate(prob_suc))), float_sum(prob_suc, checker_reward_ratio)), 0, (uint32_t)commit_interval_num, 1UL);
+                    int64_t commit_trier_reward_rate = float_mulratio(float_divide(float_sum(float_multiply(k_val, float_divide(float_sum(target_supply, float_negate(total_supply)), total_locked)), float_sum(float_one(), float_negate(prob_suc))), float_sum(prob_suc, checker_reward_ratio)), 0, (uint32_t)commit_interval_num, 1UL);
+                    TRACEXFL(commit_trier_reward_rate); //debug
 
                     // Set commit state
                     uint8_t commit_s_key[32];
@@ -417,6 +424,7 @@ int64_t hook(uint32_t reserved) {
                         commit_s_key[i] = '\0';
                     COPYBUF(account_field, commit_s_key + 4, 20);
                     COPYBUF(trier_s_data, commit_s_key + 24, 8);
+                    TRACEHEX(commit_s_key);
 
                     uint8_t commit_s_data[64];
                     *((uint64_t *)commit_s_data) = 0ULL;
@@ -439,8 +447,8 @@ int64_t hook(uint32_t reserved) {
 
                     DONE("Tacs: The commitment is created.");
                     break;
-
-                case 'E':
+                }
+                case 'E': {
                     // Evaluate a commitment
 
                     // Load otxn parameters
@@ -474,8 +482,11 @@ int64_t hook(uint32_t reserved) {
                     ASSERT(result > 0);
 
                     // Check if the caller is the checker
-                    int equal_cal_che; ACCOUNT_COMPARE(equal_cal_che, commit_s_data + 12, account_field);
-                    REQUIRE(equal_cal_che, "Tacs: Only the checker can evaluate the commitment.");
+                    int acc_cmp; ACCOUNT_COMPARE(acc_cmp, (commit_s_data + 12), account_field);
+                    REQUIRE(!acc_cmp, "Tacs: Only the checker can evaluate the commitment.");
+
+                    // Check if the commitment is not evaluated
+                    REQUIRE(*((uint64_t *)commit_s_data) == 0x0ULL, "Tacs: The commitment is already evaluated.");
 
                     // Record the result
                     COPYBUF(&eval_commit_result, commit_s_data, 8);
@@ -494,26 +505,42 @@ int64_t hook(uint32_t reserved) {
                     int64_t trier_return = float_multiply(trier_lock, float_sum(float_one(), trier_reward_rate));
                     int64_t checker_return = float_multiply(trier_lock, float_multiply(trier_reward_rate, checker_reward_ratio));
 
+                    TRACEXFL(trier_lock);//debug
+                    TRACEXFL(trier_reward_rate);//debug
+                    TRACEXFL(trier_return);//debug
+                    TRACEXFL(checker_return);//debug
+
                     uint8_t checker_return_amt[48]; // Amount format
 
                     COPYBUF(&checker_return, checker_return_amt, 8);
                     checker_return_amt[0] |= (1 << 7);
                     for(int i = 8; GUARD(12), i < 20; ++i)
                         checker_return_amt[i] = '\0';
-                    COPYBUF(TOKEN_CODE, checker_return_amt + 12, 3);
+                    COPYBUF(TOKEN_CODE, checker_return_amt + 20, 3);
                     for(int i = 23; GUARD(5), i < 28; ++i)
                         checker_return_amt[i] = '\0';
                     COPYBUF(hook_accid, checker_return_amt + 28, 20);
-
-                    // Calculate fee base
-                    int64_t fee_base = extn_fee_base(PREPARE_PAYMENT_SIMPLE_TRUSTLINE_SIZE);
+                    TRACEHEX(checker_return_amt);//debug
 
                     // Give the checker reward
                     uint8_t tx_checker[PREPARE_PAYMENT_SIMPLE_TRUSTLINE_SIZE];
+                    PREPARE_PAYMENT_SIMPLE_TRUSTLINE(tx_checker, checker_return_amt, account_field, 0, 0);
+                    // uint8_t tx_checker[PREPARE_PAYMENT_SIMPLE_SIZE]; // debug
+                    // PREPARE_PAYMENT_SIMPLE(tx_checker, 1000000ULL, account_field, 0, 0); //debug
+                    int64_t tmp3 = etxn_fee_base(SBUF(tx_checker));
+                    TRACEVAR(tmp3);
+                    uint8_t tmp4[PREPARE_PAYMENT_SIMPLE_TRUSTLINE_SIZE];
+                    int64_t tmp5 = etxn_details((uint32_t)tmp4, PREPARE_PAYMENT_SIMPLE_TRUSTLINE_SIZE);
+                    TRACEHEX(tmp4);
+                    TRACEVAR(tmp5);
+                    uint32_t tmp6 = PREPARE_PAYMENT_SIMPLE_TRUSTLINE_SIZE;
+                    TRACEVAR(tmp6);
 
-                    PREPARE_PAYMENT_SIMPLE_TRUSTLINE(tx_checker, checker_return_amt, fee_base, account_field, 0, 0);
+                    uint8_t tx_checker_result[32];
+                    int tmp1 = emit(SBUF(tx_checker_result), tx_checker, PREPARE_PAYMENT_SIMPLE_TRUSTLINE_SIZE);
+                    TRACEVAR(tmp1); //debug
+                    TRACEHEX(tx_checker_result); // debug
 
-                    emit(SBUF(tx_checker));
 
                     // Give the trier return if the task is successful
                     if (eval_commit_result == 0x1) {
@@ -524,23 +551,29 @@ int64_t hook(uint32_t reserved) {
                         trier_return_amt[0] |= (1 << 7);
                         for(int i = 8; GUARD(12), i < 20; ++i)
                             trier_return_amt[i] = '\0';
-                        COPYBUF(TOKEN_CODE, trier_return_amt + 12, 3);
+                        COPYBUF(TOKEN_CODE, trier_return_amt + 20, 3);
                         for(int i = 23; GUARD(5), i < 28; ++i)
                             trier_return_amt[i] = '\0';
                         COPYBUF(hook_accid, trier_return_amt + 28, 20);
 
                         // Give the trier return
-                        uint8_t tx_trier[PREPARE_PAYMENT_SIMPLE_TRUSTLINE_SIZE];
 
-                        PREPARE_PAYMENT_SIMPLE_TRUSTLINE(tx_trier, trier_return_amt, fee_base, account_field, 0, 0);
+                        // uint8_t tx_trier[PREPARE_PAYMENT_SIMPLE_TRUSTLINE_SIZE];
+                        // PREPARE_PAYMENT_SIMPLE_TRUSTLINE(tx_trier, trier_return_amt, eval_commit_id, 0, 0);
+                        uint8_t tx_trier[PREPARE_PAYMENT_SIMPLE_SIZE]; // debug
+                        PREPARE_PAYMENT_SIMPLE(tx_trier, 1000000ULL, eval_commit_id, 0, 0); //debug
 
-                        emit(SBUF(tx_trier));
+                        uint8_t tx_trier_result[32];
+                        int tmp2 = emit(SBUF(tx_trier_result), SBUF(tx_trier));
+                        TRACEVAR(tmp2); //debug
+                        TRACEHEX(tx_trier_result); // debug
                     }
 
                     // Update total supply and total locked supply
                     int64_t total_supply, total_locked;
                     ASSERT(state(SVAR(total_supply), "s", 1) > 0);
                     ASSERT(state(SVAR(total_locked), "l", 1) > 0);
+
 
                     total_supply = float_sum(total_supply, trier_return);
                     total_supply = float_sum(total_supply, checker_return);
@@ -549,6 +582,7 @@ int64_t hook(uint32_t reserved) {
                     ASSERT(state_set(SVAR(total_supply), "s", 1) > 0);
                     DONE("Tacs: The commitment is evaluated.");
                     break;
+                }
             }
             DONE("Tacs: Invalid command.");
         } else if (tt == ttPAYMENT) {
@@ -561,7 +595,7 @@ int64_t hook(uint32_t reserved) {
                 // Load state parameters
                 uint8_t trier_s_key[32];
                 trier_s_key[0] = 'B';
-                for (int i = 1; GUARD(7), i < 8; ++i)
+                for (int i = 1; GUARD(11), i < 12; ++i)
                     trier_s_key[i] = '\0';
                 COPYBUF(account_field, trier_s_key + 12, 20);
                 uint64_t trier_s_data[2];
@@ -581,9 +615,9 @@ int64_t hook(uint32_t reserved) {
 
                     // Check payment code
                     ASSERT((pay_amt[0] & (1 << 7)));
-                    int equal_p; BUFFER_EQUAL(equal_p, pay_amt + 12, TOKEN_CODE, 3);
-                    if (equal_p) {
-                        int64_t pay_val = *((int64_t *) pay_amt) & (1LL << 63);
+                    int equal; BUFFER_EQUAL(equal, pay_amt + 12, TOKEN_CODE, 3);
+                    if (equal) {
+                        int64_t pay_val =  INT64_FROM_BUF(pay_amt) & ~(1LL << 63);
                         trier_s_data[1] = float_sum(trier_s_data[1], pay_val);
 
                         ASSERT(state_set(SBUF(trier_s_data), SBUF(trier_s_key)) > 0);
@@ -592,7 +626,7 @@ int64_t hook(uint32_t reserved) {
                     }
                 } else if (pay_bytes > 0) {
                     // XRP payment (XRP is automatically exchanged with token)
-                    uint64_t pay_drops = *((uint64_t *) pay_amt) & ((1ULL << 62) - 1ULL);
+                    uint64_t pay_drops = UINT64_FROM_BUF(pay_amt) & ~(3ULL << 62);
                     int64_t pay_val; UINT64_TO_XFL_ROUND(pay_drops, pay_val);
                     pay_val = float_mulratio(pay_val, 0, 1UL, 1000000UL);
                     trier_s_data[1] = float_sum(trier_s_data[1], pay_val);
@@ -612,7 +646,7 @@ int64_t hook(uint32_t reserved) {
 
             DONE("Tacs: Normal payment.");
         }
-        DONE("Tacs: Normal incoimng transaction.");
+        DONE("Tacs: Normal incoming transaction.");
     } else {
         // Outgoing txn
         DONE("Tacs: Outgoing transaction.");
@@ -621,3 +655,9 @@ int64_t hook(uint32_t reserved) {
     // unreachable
     return 0;
 }
+/*
+int64_t cbak(uint32_t what) {
+    TRACEVAR(what); //debug
+    return 0;
+}
+*/
