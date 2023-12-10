@@ -11,9 +11,8 @@ import { UserStateContext } from '@/app/_common/hooks/statemanagement';
 export default function Home() {
     
     const userstate_ = useContext(UserStateContext);
-    require('dotenv').config()
-    const env = process.env
-    userstate_.chain.connect(String(env.CHAIN_URL)); //環境変数
+    console.log(String(process.env.CHAIN_URL))
+    userstate_.chain.connect(String(process.env.CHAIN_URL)); //環境変数
 
     return (
         <main>

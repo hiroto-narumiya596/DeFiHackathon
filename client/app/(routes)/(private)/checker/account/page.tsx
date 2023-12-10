@@ -37,14 +37,13 @@ const AccountPage_Checker = () => {
 }
 
 const AccountPage_Checker_Body = (userstate_: UserAuthState) => {
-    const checkerstate_: Checker = userstate_.checkerstate;
     const [isModalOpen, setModalOpen] = useState(false);
     console.log(userstate_)
     return(
         <div className="min-h-fit w-screen">
             {isModalOpen?
             <div className="absolute">
-                <ModalComponent checkerstate_={checkerstate_} setModalOpen={setModalOpen}/>
+                <ModalComponent userstate_={userstate_} setModalOpen={setModalOpen}/>
             </div>:<></>}
             <div className="px-32 py-6">
                 <div className="text-4xl font-bold">Account Information</div>
@@ -53,11 +52,11 @@ const AccountPage_Checker_Body = (userstate_: UserAuthState) => {
                     <div className="space-y-4">
                         <div className="space-y-1">
                             <div>name</div>
-                            <div className="text-xl font-medium">{checkerstate_.name}</div>
+                            <div className="text-xl font-medium">{userstate_.checkerstate.name}</div>
                         </div>
                         <div className="space-y-1">
                             <div>token</div>
-                            <div className="text-xl font-medium">{checkerstate_.token}</div>
+                            <div className="text-xl font-medium">{userstate_.checkerstate.token}</div>
                         </div>
                     </div>
                 </div>
@@ -112,7 +111,7 @@ const TaskBlock = (task_: Task) => {
 
 //タスク追加のときに使われるモーダルコンポーネント。
 //タスク追加のときにチェーンとはやり取りしない。
-const ModalComponent = (props: {checkerstate_: Checker, setModalOpen: any}) =>{
+const ModalComponent = (props: {userstate_: UserAuthState, setModalOpen: any}) =>{
     const router = useRouter()
 
     const {
@@ -135,6 +134,7 @@ const ModalComponent = (props: {checkerstate_: Checker, setModalOpen: any}) =>{
 
     const onSubmit: SubmitHandler<Task> = async (data: Task) => {
         try{
+            props.userstate_.chain.createTask(data.id, String(data.missionspan));
             //ここでタスク追加のAPIを実行する
             const response = await fetch('http://127.0.0.1:8000/addtask',{
                 method: 'POST',
@@ -145,7 +145,7 @@ const ModalComponent = (props: {checkerstate_: Checker, setModalOpen: any}) =>{
                 body: JSON.stringify(data),
             })
             const task: Task = await response.json(); //データの受け取り
-            props.checkerstate_.tasks.push(task);
+            props.userstate_.checkerstate.tasks.push(task);
             props.setModalOpen(false);
         }
         catch(e){
