@@ -5,7 +5,7 @@ import * as rippleAddressCodec from 'ripple-address-codec'
 
 type LoginState = "None" | "Trier" | "Checker"
 
-const tokenCode = "TCS"
+export const tokenCode = "TCS"
 
 export class Chain {
     loginState: LoginState

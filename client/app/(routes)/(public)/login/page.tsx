@@ -48,6 +48,12 @@ const Login = () => {
     const onSubmit: SubmitHandler<Logindata> = async(data: Logindata) => {
         const user_type= data.user_type;
         userstate_.loginstate.loginstate = user_type;
+        if(user_type=="Trier"){
+            userstate_.chain.loginState = "Trier";
+        }
+        if(user_type=="Checker"){
+            userstate_.chain.loginState = "Checker";
+        }
 
         try{
             //データベースのAPI
@@ -64,23 +70,28 @@ const Login = () => {
 
             //チェーンのAPI
             //チェーンからトークン残高を取得する関数を定義（さしあたり、結果だけ渡す）
-            const triertoken = 3000;
-            const checkertoken = 1300;
+            userstate_.chain.updateLoginState(userstate_.chain.loginState,data.id);
+            if(userstate_.chain.loadTokenBalance()==undefined){
+                throw Error('error');
+            }
+            const token: number = Number(userstate_.chain.loadTokenBalance())
+            
+
 
             //グローバルデータ（state）の更新
-            if(userstate_.loginstate.loginstate=="checker"){
+            if(userstate_.chain.loginState=="Checker"){
                 userstate_.checkerstate.id = data.id
                 userstate_.checkerstate.name = data.name
-                userstate_.checkerstate.token = checkertoken
+                userstate_.checkerstate.token = token
                 userstate_.checkerstate.tasks = currentdatas.tasks
                 userstate_.checkerstate.commits = currentdatas.commits
                 userstate_.checkerstate.requests = currentdatas.requests
                 router.push("/checker");
             }
-            if(userstate_.loginstate.loginstate=="trier"){
+            if(userstate_.chain.loginState=="Trier"){
                 userstate_.trierstate.id = data.id
                 userstate_.trierstate.name = data.name
-                userstate_.trierstate.token = triertoken
+                userstate_.trierstate.token = token
                 userstate_.trierstate.tasks = currentdatas.tasks
                 userstate_.trierstate.commits = currentdatas.commits              
                 router.push("/trier");

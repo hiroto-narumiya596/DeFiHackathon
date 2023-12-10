@@ -250,16 +250,21 @@ const RequestBlock = (props:{request_: Request, userstate_: UserAuthState}) => {
         }*/
 
 
-        //チェーンのAPI
-        //要件は以下の通り
-        //チェーン上のコミットに、コミットID(props.request_commitid)でアクセス
-        //アクセスしたコミットに、承認・非承認（isApprovalの結果）を渡す
-        //チェッカーのトークン残高を取得する
-        props.userstate_.checkerstate.token = 100005;
-
+        
 
 
         try{
+            //チェーンのAPI
+            //要件は以下の通り
+            //チェーン上のコミットに、コミットID(props.request_commitid)でアクセス
+            //アクセスしたコミットに、承認・非承認（isApprovalの結果）を渡す
+            //チェッカーのトークン残高を取得する
+            props.userstate_.chain.evaluateCommit(props.request_.commitid, data.approval);
+            if(props.userstate_.chain.loadTokenBalance()==undefined){
+                throw Error("error");
+            }
+            const token: number = Number(props.userstate_.chain.loadTokenBalance());
+            props.userstate_.checkerstate.token = token;
             const response = await fetch('http://127.0.0.1:8000/checkandapproval',{
                 method: 'POST',
                 headers: {

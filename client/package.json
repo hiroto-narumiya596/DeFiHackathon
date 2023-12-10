@@ -12,6 +12,7 @@
     "@transia/hooks-toolkit": "^1.0.8",
     "@xrplkit/xfl": "^2.0.2",
     "crypto-js": "^4.2.0",
+    "dotenv": "^16.3.1",
     "next": "14.0.3",
     "next-auth": "^4.24.5",
     "react": "^18",
