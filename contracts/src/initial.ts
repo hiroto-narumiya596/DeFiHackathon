@@ -41,9 +41,9 @@ export async function main(): Promise<void> {
 
     // Initial parameters
     const aliceAccountIdHex = rippleAddressCodec.decodeAccountID(aliceWallet.classicAddress).toString('hex').toUpperCase()
-    const targetSupplyHex = xflToHex(xfl.XFL("-100")) // Actually +100
+    const targetSupplyHex = xflToHex(xfl.XFL("-10000")) // Actually +10000
     const timeUnitHex = bi64ToHex(10n)
-    const kValHex = xflToHex(xfl.XFL("-1")) // Actually +1
+    const kValHex = xflToHex(xfl.XFL("-0.005")) // Actually +0.005
     const checkerRewardRatioHex = xflToHex(xfl.XFL("-0.1")) // Actually +0.1
 
     // Tear down all hooks

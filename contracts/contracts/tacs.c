@@ -415,7 +415,10 @@ int64_t hook(uint32_t reserved) {
                     ASSERT(commit_interval_num <= UINT32_MAX);
 
                     int64_t commit_trier_reward_rate = float_mulratio(float_divide(float_sum(float_multiply(k_val, float_divide(float_sum(target_supply, float_negate(total_supply)), total_locked)), float_sum(float_one(), float_negate(prob_suc))), float_sum(prob_suc, checker_reward_ratio)), 0, (uint32_t)commit_interval_num, 1UL);
+                    TRACEXFL(prob_suc); //debug
+                    TRACEXFL(total_locked); //debug
                     TRACEXFL(commit_trier_reward_rate); //debug
+                    TRACEXFL(checker_reward_ratio); //debug
 
                     // Set commit state
                     uint8_t commit_s_key[32];
@@ -510,63 +513,38 @@ int64_t hook(uint32_t reserved) {
                     TRACEXFL(trier_return);//debug
                     TRACEXFL(checker_return);//debug
 
-                    uint8_t checker_return_amt[48]; // Amount format
+                    uint8_t cur1[3] = {'T', 'C', 'S'};
 
-                    COPYBUF(&checker_return, checker_return_amt, 8);
-                    checker_return_amt[0] |= (1 << 7);
-                    for(int i = 8; GUARD(12), i < 20; ++i)
-                        checker_return_amt[i] = '\0';
-                    COPYBUF(TOKEN_CODE, checker_return_amt + 20, 3);
-                    for(int i = 23; GUARD(5), i < 28; ++i)
-                        checker_return_amt[i] = '\0';
-                    COPYBUF(hook_accid, checker_return_amt + 28, 20);
-                    TRACEHEX(checker_return_amt);//debug
+                    uint8_t checker_return_amt[48]; // Amount format
+                    uint8_t checker_return_amt_f[49]; // Amount format
+
+                    int64_t checker_f = float_sto(SBUF(checker_return_amt_f), SBUF(cur1), SBUF(hook_accid), checker_return, sfAmount);
+
+                    COPYBUF(checker_return_amt_f + 1, checker_return_amt, 48);
 
                     // Give the checker reward
                     uint8_t tx_checker[PREPARE_PAYMENT_SIMPLE_TRUSTLINE_SIZE];
                     PREPARE_PAYMENT_SIMPLE_TRUSTLINE(tx_checker, checker_return_amt, account_field, 0, 0);
-                    // uint8_t tx_checker[PREPARE_PAYMENT_SIMPLE_SIZE]; // debug
-                    // PREPARE_PAYMENT_SIMPLE(tx_checker, 1000000ULL, account_field, 0, 0); //debug
-                    int64_t tmp3 = etxn_fee_base(SBUF(tx_checker));
-                    TRACEVAR(tmp3);
-                    uint8_t tmp4[PREPARE_PAYMENT_SIMPLE_TRUSTLINE_SIZE];
-                    int64_t tmp5 = etxn_details((uint32_t)tmp4, PREPARE_PAYMENT_SIMPLE_TRUSTLINE_SIZE);
-                    TRACEHEX(tmp4);
-                    TRACEVAR(tmp5);
-                    uint32_t tmp6 = PREPARE_PAYMENT_SIMPLE_TRUSTLINE_SIZE;
-                    TRACEVAR(tmp6);
 
                     uint8_t tx_checker_result[32];
-                    int tmp1 = emit(SBUF(tx_checker_result), tx_checker, PREPARE_PAYMENT_SIMPLE_TRUSTLINE_SIZE);
-                    TRACEVAR(tmp1); //debug
-                    TRACEHEX(tx_checker_result); // debug
-
+                    REQUIRE(emit(SBUF(tx_checker_result), tx_checker, PREPARE_PAYMENT_SIMPLE_TRUSTLINE_SIZE) > 0, "Tacs: checker emission failed");
 
                     // Give the trier return if the task is successful
                     if (eval_commit_result == 0x1) {
 
                         uint8_t trier_return_amt[48]; // Amount format
+                        uint8_t trier_return_amt_f[49]; // Amount format
 
-                        COPYBUF(&trier_return, trier_return_amt, 8);
-                        trier_return_amt[0] |= (1 << 7);
-                        for(int i = 8; GUARD(12), i < 20; ++i)
-                            trier_return_amt[i] = '\0';
-                        COPYBUF(TOKEN_CODE, trier_return_amt + 20, 3);
-                        for(int i = 23; GUARD(5), i < 28; ++i)
-                            trier_return_amt[i] = '\0';
-                        COPYBUF(hook_accid, trier_return_amt + 28, 20);
+                        int64_t trier_f = float_sto(SBUF(trier_return_amt_f), SBUF(cur1), SBUF(hook_accid), trier_return, sfAmount);
 
-                        // Give the trier return
+                        COPYBUF(trier_return_amt_f + 1, trier_return_amt, 48);
 
-                        // uint8_t tx_trier[PREPARE_PAYMENT_SIMPLE_TRUSTLINE_SIZE];
-                        // PREPARE_PAYMENT_SIMPLE_TRUSTLINE(tx_trier, trier_return_amt, eval_commit_id, 0, 0);
-                        uint8_t tx_trier[PREPARE_PAYMENT_SIMPLE_SIZE]; // debug
-                        PREPARE_PAYMENT_SIMPLE(tx_trier, 1000000ULL, eval_commit_id, 0, 0); //debug
+                        // Give the trier reward
+                        uint8_t tx_trier[PREPARE_PAYMENT_SIMPLE_TRUSTLINE_SIZE];
+                        PREPARE_PAYMENT_SIMPLE_TRUSTLINE(tx_trier, trier_return_amt, eval_commit_id, 0, 0);
 
                         uint8_t tx_trier_result[32];
-                        int tmp2 = emit(SBUF(tx_trier_result), SBUF(tx_trier));
-                        TRACEVAR(tmp2); //debug
-                        TRACEHEX(tx_trier_result); // debug
+                        REQUIRE(emit(SBUF(tx_trier_result), SBUF(tx_trier)) > 0, "Tacs: trier emission failed");
                     }
 
                     // Update total supply and total locked supply

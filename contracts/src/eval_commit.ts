@@ -11,6 +11,7 @@ import {
     XrplIntegrationTestContext,
     serverUrl,
     setupClient,
+    ledgerAccept,
 } from '@transia/hooks-toolkit/dist/npm/src/libs/xrpl-helpers'
 import * as rippleAddressCodec from 'ripple-address-codec'
 
@@ -71,6 +72,8 @@ export async function main(): Promise<void> {
         invokeResult.meta as TransactionMetadata
     )
     console.log(invokeHookExecutions.executions[0].HookReturnString)
+
+    await ledgerAccept(testContext.client)
 
     // Disconnect from the XRPL test context
     await testContext.client.disconnect()
