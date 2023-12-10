@@ -134,13 +134,14 @@ const ModalComponent = (props: {userstate_: UserAuthState, setModalOpen: any}) =
                 throw Error('error');
             }            
             const checkerID: string = String(Chain.getCheckerIdFromTaskId(data.taskid));
-            //後回し
-            props.userstate_.chain.commit("");
-
-            
-            const res_token: number = props.userstate_.trierstate.token - data.bettoken;
+            props.userstate_.chain.commit(data.taskid, String(data.bettoken), true);
+            if (props.userstate_.chain.loadTokenBalance()==undefined){
+                throw Error('error');
+            }
+            const res_token: number = Number(props.userstate_.chain.loadTokenBalance());
             data.checkerid = checkerID;
             data.id = commitID;
+            props.userstate_.trierstate.token = res_token;
     
 
             //データベースのAPI
@@ -156,7 +157,6 @@ const ModalComponent = (props: {userstate_: UserAuthState, setModalOpen: any}) =
 
 
             //クライアント側の状態データの更新
-            props.userstate_.trierstate.token = res_token;
             props.userstate_.trierstate.tasks.push(task_data);
             props.userstate_.trierstate.commits.push(data);
             

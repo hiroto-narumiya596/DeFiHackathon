@@ -19,12 +19,14 @@ commit1: Commit = Commit(id="commit1", taskid="Biufwe243Nknink", checkerid="Inje
 task1: Task = Task(id="Biufwe243Nknink", name="らくらく英単語", img="", description="らくらく英単語帳のP1~10までが範囲", checkerid="InjeBi12ni1NJd", missionspan=2, taskinfoURL=taskinfoURL, testinfoURL="https://docs.google.com/forms/d/e/1FAIpQLScn-lH0GxFSZOiNjYqBogF5ozXzhb40lxvZyqIDjuQWdqY1Zw/viewform")
 task2: Task = Task(id="Biufwe243NDjink", name="らくらく英単語", img="", description="らくらく英単語帳のP11~20までが範囲", checkerid="InjeBi12ni1NJd", missionspan=0, taskinfoURL=taskinfoURL, testinfoURL="https://docs.google.com/forms/d/e/1FAIpQLSeYhiqxOrVglvNBfbiYkeYtwy00JU_aOWcgUqC0bY_trm31sw/viewform")
 task3: Task = Task(id="siuGweV43NDjink", name="らくらく英単語", img="", description="らくらく英単語帳のP21~30までが範囲", checkerid="InjeBi12ni1NJd", missionspan=0, taskinfoURL=taskinfoURL, testinfoURL="https://docs.google.com/forms/d/e/1FAIpQLSfuW-aFOL9NEZY7F3l2OlWQH5RjvNzrYppJjhnb2JQJIcwPcA/viewform")
-checker1_tasks: List[Task] = [task1,task2,task3]
-trier1_commits: List[Commit] = [commit1]
-checker1_commits: List[Commit] = [commit1]
+
+
+checker1_tasks: List[Task] = []
+trier1_commits: List[Commit] = []
+checker1_commits: List[Commit] = []
 checker1_requests: List[Request] = []
-logindata_trier1: LoginData = LoginData(user_type="trier",id="Ugjw874NJboef")
-logindata_checker1: LoginData = LoginData(user_type="checker",id="InjeBi12ni1NJd")
+logindata_trier1: LoginData = LoginData(user_type="trier",id="snzb83cV8zpLPTE4nQamoLP9pbhB7")
+logindata_checker1: LoginData = LoginData(user_type="checker",id="spkcsko6Ag3RbCSVXV2FJ8Pd4Zac1")
 
 app = FastAPI()
 
