@@ -45,32 +45,7 @@ class Checker(BaseModel):
     token: float
     tasks: List[Task]
     commits: List[Commit]
-    requests: List[Request]
-
-
-class UserAuthState(BaseModel):
-    loginstate: LoginState
-    trierstate: Trier
-    checkerstate: Checker    
-
-
-# 通信用データ
-#タスクを追加するときに使うデータ型
-class AddTaskData(BaseModel):
-    taskname: str
-    description: str
-    checkerid: str
-    missionspan: int
-    taskinfoURL: str
-    testinfoURL: str
-
-#タスク承認のときに使うデータ型
-class CheckandApprovalData(BaseModel):
-    requestid: str
-    trierid: str
-    checkerid: str
-    approval: bool
-
+    requests: List[Request]  
 
 
 #ログインのときに使うデータ型
@@ -85,6 +60,9 @@ class CurrentTasksCommitsRequests(BaseModel):
     commits: List[Commit]
     requests: List[Request]
 
-
-#コミットするときに使うデータ型
-#キャッシュサーバ送信データ
+#タスク承認のときに使うデータ型
+class CheckandApprovalData(BaseModel):
+    requestid: str
+    trierid: str
+    checkerid: str
+    approval: bool

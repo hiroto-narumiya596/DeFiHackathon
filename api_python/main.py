@@ -6,7 +6,7 @@ import uuid
 #CORSエラー回避
 from starlette.middleware.cors import CORSMiddleware
 
-from datadifinition import LoginData, LoginState, Task, Trier, Checker, UserAuthState, AddTaskData, Request, Commit, CheckandApprovalData, CurrentTasksCommitsRequests
+from datadifinition import LoginData, LoginState, Task, Request, Commit, CheckandApprovalData, CurrentTasksCommitsRequests
 
 
 # ダミーデータ
@@ -15,25 +15,16 @@ from datadifinition import LoginData, LoginState, Task, Trier, Checker, UserAuth
 taskinfoURL: str = "https://note.com/preview/nb4d6984e61fc?prev_access_key=80574b57237f7e28be15e33a0b066282"
 loginstate_null: LoginState = LoginState(loginstate="")
 task_null: Task = Task(id="", name="", img="", description="", checkerid="", missionspan=0, taskinfoURL="", testinfoURL="")
-trier_null: Trier = Trier(id="", name="", token=0, tasks=[], commits=[])
-checker_null: Checker = Checker(id="", name="", token=0, tasks=[], commits=[], requests=[])
-commit1: Commit = Commit(id="", taskid="Biufwe243Nknink", checkerid="InjeBi12ni1NJd", trierid="Ugjw874NJboef", date=0, bettoken=30)
+commit1: Commit = Commit(id="commit1", taskid="Biufwe243Nknink", checkerid="InjeBi12ni1NJd", trierid="Ugjw874NJboef", date=0, bettoken=30)
 task1: Task = Task(id="Biufwe243Nknink", name="らくらく英単語", img="", description="らくらく英単語帳のP1~10までが範囲", checkerid="InjeBi12ni1NJd", missionspan=2, taskinfoURL=taskinfoURL, testinfoURL="https://docs.google.com/forms/d/e/1FAIpQLScn-lH0GxFSZOiNjYqBogF5ozXzhb40lxvZyqIDjuQWdqY1Zw/viewform")
 task2: Task = Task(id="Biufwe243NDjink", name="らくらく英単語", img="", description="らくらく英単語帳のP11~20までが範囲", checkerid="InjeBi12ni1NJd", missionspan=0, taskinfoURL=taskinfoURL, testinfoURL="https://docs.google.com/forms/d/e/1FAIpQLSeYhiqxOrVglvNBfbiYkeYtwy00JU_aOWcgUqC0bY_trm31sw/viewform")
 task3: Task = Task(id="siuGweV43NDjink", name="らくらく英単語", img="", description="らくらく英単語帳のP21~30までが範囲", checkerid="InjeBi12ni1NJd", missionspan=0, taskinfoURL=taskinfoURL, testinfoURL="https://docs.google.com/forms/d/e/1FAIpQLSfuW-aFOL9NEZY7F3l2OlWQH5RjvNzrYppJjhnb2JQJIcwPcA/viewform")
-trier1: Trier = Trier(id="Ugjw874NJboef", name="Ryodai", token=3000, tasks=[task1], commits=[commit1])
-checker1: Checker = Checker(id="InjeBi12ni1NJd", name="Ohmiya", token=10000, tasks=[task1, task2, task3], commits=[commit1], requests=[])
-
-
 checker1_tasks: List[Task] = [task1,task2,task3]
 trier1_commits: List[Commit] = [commit1]
 checker1_commits: List[Commit] = [commit1]
 checker1_requests: List[Request] = []
 logindata_trier1: LoginData = LoginData(user_type="trier",id="Ugjw874NJboef")
 logindata_checker1: LoginData = LoginData(user_type="checker",id="InjeBi12ni1NJd")
-
-
-
 
 app = FastAPI()
 
@@ -107,12 +98,12 @@ def addtask(data: Task):
         return task_null.dict()    
     
 
-# コミット申請
+# コミット承認申請
 @app.post("/requestapproval")
 def requestapproval(data: Request):
     try:
         data.id = str(uuid.uuid4())
-        if data.trierid == logindata_checker1.id:
+        if data.checkerid == logindata_checker1.id:
             checker1_requests.append(data)
             
             return data.dict()
@@ -125,23 +116,19 @@ def requestapproval(data: Request):
 @app.post("/checkandapproval")
 def checkandapproval(data: CheckandApprovalData):
     try:
-        if data.checkerid == checker1.id:
-            for request_ in checker1.requests:
+        if data.checkerid == logindata_checker1.id and data.trierid==logindata_trier1.id:
+            for request_ in checker1_requests:
                 if data.requestid == request_.id:
                     targetrequest = request_
-                    for commit_ in checker1.commits:
+                    for commit_ in checker1_commits:
                         if commit_.id == targetrequest.commitid:
                             targetcommit = commit_
-                            checker1.commits.remove(targetcommit)
-                            checker1.requests.remove(targetrequest)                            
-                            if data.approval == True:
-                                trier1.token += targetcommit.bettoken * 2
-                                checker1.token += targetcommit.bettoken * 0.3
-                            else:
-                                checker1.token += targetcommit * 0.1
+                        checker1_commits.remove(targetcommit)
+                        checker1_requests.remove(targetrequest)
+                        trier1_commits.remove(targetcommit)
 
-        
-        return checker1.dict()
+            print({'commits': checker1_commits, 'requests': checker1_requests})
+        return {'commits': checker1_commits, 'requests': checker1_requests}
     except:
         print(traceback.format_exc())
-        return checker1.dict()
+        return {'commits': [], 'requests': []}
