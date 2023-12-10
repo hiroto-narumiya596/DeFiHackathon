@@ -10,6 +10,7 @@ import { UserStateContext } from "@/app/_common/hooks/statemanagement"
 import { UserAuthState, Task, Trier, Commit } from "@/app/_common/types/datadefinition"
 import ServiceIcon from "source/img/serviceicon1.svg"
 import UserIcon from "source/img/usericon.svg"
+import { Chain } from "@/app/api/api_chain/chain";
 
 
 
@@ -30,11 +31,11 @@ const AccountPage_Trier = () => {
 }
 
 const AccountPage_Trier_Body = (userstate_: UserAuthState) => {
-    const trierstate_ = userstate_.trierstate;
+
     const [isModalOpen, setModalOpen] = useState(false);
     return(
         <div>
-            {isModalOpen?<div className="absolute"><ModalComponent trierstate_={trierstate_} setModalOpen={setModalOpen}/></div>:<></>}
+            {isModalOpen?<div className="absolute"><ModalComponent userstate_={userstate_} setModalOpen={setModalOpen}/></div>:<></>}
         <div className="min-h-fit w-screen px-32 py-6">
             <div className="text-4xl font-bold">Account Information</div>
             <div className="flex space-x-8 my-5">
@@ -42,11 +43,11 @@ const AccountPage_Trier_Body = (userstate_: UserAuthState) => {
                 <div className="space-y-4">
                     <div className="space-y-1">
                         <div>name</div>
-                        <div className="text-xl font-medium">{trierstate_.name}</div>
+                        <div className="text-xl font-medium">{userstate_.trierstate.name}</div>
                     </div>
                     <div className="space-y-1">
                         <div>token</div>
-                        <div className="text-xl font-medium">{trierstate_.token}</div>
+                        <div className="text-xl font-medium">{userstate_.trierstate.token}</div>
                     </div>
                 </div>
             </div>
@@ -98,7 +99,7 @@ const TaskBlock = (task_: Task) => {
 
 
 //コミット用のモーダル
-const ModalComponent = (props: {trierstate_: Trier, setModalOpen: any}) => {
+const ModalComponent = (props: {userstate_: UserAuthState, setModalOpen: any}) => {
     const router = useRouter()
 
     const {
@@ -111,7 +112,7 @@ const ModalComponent = (props: {trierstate_: Trier, setModalOpen: any}) => {
             id: '',
             taskid : '',
             checkerid : '',
-            trierid: props.trierstate_.id,
+            trierid: props.userstate_.trierstate.id,
             bettoken: 0,
             date: 0,
         },
@@ -125,12 +126,22 @@ const ModalComponent = (props: {trierstate_: Trier, setModalOpen: any}) => {
             //コミット固有のIDを取得する
             //タスクIDを使ってチェーンから、チェッカーIDを取得する
             //コミット後のトークン残高を取得する
-            const commitID: string = "wdbHBJKbwc";
-            const checkerID: string = "InjeBi12ni1NJd";
-            const res_token: number = props.trierstate_.token - data.bettoken;
+            if (props.userstate_.chain.loadLastCommitmentId()==undefined){
+                throw Error('error');
+            }
+            const commitID: string = String(props.userstate_.chain.loadLastCommitmentId());
+            if (Chain.getCheckerIdFromTaskId(data.taskid)==undefined){
+                throw Error('error');
+            }            
+            const checkerID: string = String(Chain.getCheckerIdFromTaskId(data.taskid));
+            //後回し
+            props.userstate_.chain.commit("");
 
-            data.id = commitID;
+            
+            const res_token: number = props.userstate_.trierstate.token - data.bettoken;
             data.checkerid = checkerID;
+            data.id = commitID;
+    
 
             //データベースのAPI
             const response = await fetch('http://127.0.0.1:8000/addcommittask',{
@@ -145,9 +156,9 @@ const ModalComponent = (props: {trierstate_: Trier, setModalOpen: any}) => {
 
 
             //クライアント側の状態データの更新
-            props.trierstate_.token = res_token;
-            props.trierstate_.tasks.push(task_data);
-            props.trierstate_.commits.push(data);
+            props.userstate_.trierstate.token = res_token;
+            props.userstate_.trierstate.tasks.push(task_data);
+            props.userstate_.trierstate.commits.push(data);
             
 
             props.setModalOpen(false);

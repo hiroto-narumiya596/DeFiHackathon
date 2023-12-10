@@ -1,4 +1,6 @@
 //このあたりは工夫が可能だが、大変なのでやらない
+import { Chain } from "@/app/api/api_chain/chain";
+
 
 //クライアントサイドで使うデータを定義
 export type LoginState = {
@@ -52,6 +54,7 @@ export type Checker = {
 };
 
 export type UserAuthState = {
+    chain: Chain,
     loginstate: LoginState,
     trierstate: Trier,
     checkerstate: Checker,

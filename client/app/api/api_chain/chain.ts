@@ -23,7 +23,7 @@ export function bi64ToHex(bi64: bigint): string {
 
 type LoginState = "None" | "Trier" | "Checker"
 
-const tokenCode = "TCS"
+export const tokenCode = "TCS"
 
 export class Chain {
     loginState: LoginState
